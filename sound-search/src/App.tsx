@@ -7,12 +7,6 @@ import { useTrackSearch } from "./hooks/useTrackSearch";
 import type { Track, ViewMode } from "./types";
 import { mockRecentSearches } from "./mock/mockTracks";
 
-/**
- * Step: the search results panel is now backed by `soundApiClient` (via
- * `useTrackSearch`) instead of a static mock array. Recent-searches
- * persistence and the view-mode-remembered-across-visits bonus still live
- * here as local state for now — those are the next step.
- */
 export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedTrack, setSelectedTrack] = useState<Track | undefined>();
@@ -46,8 +40,15 @@ export default function App() {
   };
 
   return (
-    // FIX 1: Use 100dvh to prevent layout jumping on mobile dynamic address bars
-    <Box sx={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{
+        height: { xs: "100dvh", md: "auto" },
+        minHeight: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
       {/* <AppHeader /> */}
 
       <Box
@@ -55,22 +56,25 @@ export default function App() {
         sx={{
           flex: 1,
           display: "grid",
-          gap: 2.5,
-          p: { xs: 2, md: 3 },
+          gap: { xs: 1.5, md: 2.5 },
+          p: { xs: 1.5, md: 3 },
+          // Equal 3-row split on mobile, side-by-side columns on larger screens
           gridTemplateColumns: {
             xs: "1fr",
             md: "1fr 1fr",
             lg: "1.3fr 1fr 1fr",
           },
-          alignItems: "start",
+          gridTemplateRows: {
+            xs: "repeat(3, minmax(0, 1fr))",
+            md: "none",
+          },
+          alignItems: "stretch",
+          height: { xs: "100%", md: "auto" },
         }}
       >
-        {/* FIX 2: Swap overflow: 'hidden' to overflowY: 'auto' so content scrolls vertically instead of clipping */}
-        {/* FIX 3: Remove strict minHeight on mobile screens to allow natural shrinking */}
         <Box
           sx={{
-            minHeight: { xs: "auto", md: 400 },
-            maxHeight: { lg: "calc(100vh - 48px)" },
+            minHeight: 0,
             minWidth: 0,
             overflowY: "auto",
             gridColumn: { xs: "span 1", md: "span 2", lg: "span 1" },
@@ -97,8 +101,7 @@ export default function App() {
 
         <Box
           sx={{
-            minHeight: { xs: "auto", md: 400 },
-            maxHeight: { lg: "calc(100vh - 48px)" },
+            minHeight: 0,
             minWidth: 0,
             overflowY: "auto",
           }}
@@ -112,8 +115,7 @@ export default function App() {
 
         <Box
           sx={{
-            minHeight: { xs: "auto", md: 400 },
-            maxHeight: { lg: "calc(100vh - 48px)" },
+            minHeight: 0,
             minWidth: 0,
             overflowY: "auto",
           }}
