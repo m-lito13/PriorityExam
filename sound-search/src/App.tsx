@@ -46,7 +46,8 @@ export default function App() {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    // FIX 1: Use 100dvh to prevent layout jumping on mobile dynamic address bars
+    <Box sx={{ minHeight: "100dvh", display: "flex", flexDirection: "column" }}>
       {/* <AppHeader /> */}
 
       <Box
@@ -56,11 +57,25 @@ export default function App() {
           display: "grid",
           gap: 2.5,
           p: { xs: 2, md: 3 },
-          gridTemplateColumns: { xs: "1fr", md: "1.3fr 1fr 1fr" },
+          gridTemplateColumns: {
+            xs: "1fr",
+            md: "1fr 1fr",
+            lg: "1.3fr 1fr 1fr",
+          },
           alignItems: "start",
         }}
       >
-        <Box sx={{ minHeight: 480 }}>
+        {/* FIX 2: Swap overflow: 'hidden' to overflowY: 'auto' so content scrolls vertically instead of clipping */}
+        {/* FIX 3: Remove strict minHeight on mobile screens to allow natural shrinking */}
+        <Box
+          sx={{
+            minHeight: { xs: "auto", md: 400 },
+            maxHeight: { lg: "calc(100vh - 48px)" },
+            minWidth: 0,
+            overflowY: "auto",
+            gridColumn: { xs: "span 1", md: "span 2", lg: "span 1" },
+          }}
+        >
           <SearchPanel
             tracks={tracks}
             viewMode={viewMode}
@@ -80,7 +95,14 @@ export default function App() {
           />
         </Box>
 
-        <Box sx={{ minHeight: 480 }}>
+        <Box
+          sx={{
+            minHeight: { xs: "auto", md: 400 },
+            maxHeight: { lg: "calc(100vh - 48px)" },
+            minWidth: 0,
+            overflowY: "auto",
+          }}
+        >
           <ImagePanel
             track={selectedTrack}
             isPlaying={isPlaying}
@@ -88,7 +110,14 @@ export default function App() {
           />
         </Box>
 
-        <Box sx={{ minHeight: 480 }}>
+        <Box
+          sx={{
+            minHeight: { xs: "auto", md: 400 },
+            maxHeight: { lg: "calc(100vh - 48px)" },
+            minWidth: 0,
+            overflowY: "auto",
+          }}
+        >
           <RecentSearchesPanel searches={recentSearches} onSelect={submitSearch} />
         </Box>
       </Box>
