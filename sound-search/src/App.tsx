@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Box } from "@mui/material";
-import { AppHeader } from "./components/AppHeader";
 import { SearchPanel } from "./components/SearchPanel";
 import { ImagePanel } from "./components/ImagePanel";
 import { RecentSearchesPanel } from "./components/RecentSearchesPanel";
