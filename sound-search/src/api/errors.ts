@@ -5,12 +5,12 @@
  * this" apart from "this actually needs a retry button".
  */
 export class SoundApiError extends Error {
-  constructor(
-    message: string,
-    public readonly cause?: unknown,
-  ) {
+  public readonly cause?: unknown;
+
+  constructor(message: string, cause?: unknown) {
     super(message);
     this.name = "SoundApiError";
+    this.cause = cause;
   }
 }
 
