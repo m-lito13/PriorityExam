@@ -12,7 +12,9 @@ interface SearchPanelProps {
   errorMessage?: string;
   hasPrevious: boolean;
   hasNext: boolean;
-  onSearch: (term: string) => void;
+  query: string;
+  onQueryChange: (value: string) => void;
+  onSubmitSearch: (value: string) => void;
   onSelectTrack: (track: Track) => void;
   onRetry: () => void;
   onPrevious: () => void;
@@ -36,7 +38,11 @@ export function SearchPanel(props: SearchPanelProps) {
         Search
       </Typography>
 
-      <SearchBar onSearch={props.onSearch} />
+      <SearchBar
+        value={props.query}
+        onChange={props.onQueryChange}
+        onSubmit={props.onSubmitSearch}
+      />
 
       <Box sx={{ flex: 1, mt: 2, overflowY: "auto" }}>
         <SearchResults

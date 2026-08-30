@@ -4,29 +4,42 @@ import { AppHeader } from "./components/AppHeader";
 import { SearchPanel } from "./components/SearchPanel";
 import { ImagePanel } from "./components/ImagePanel";
 import { RecentSearchesPanel } from "./components/RecentSearchesPanel";
-import { mockTracks, mockRecentSearches } from "./mock/mockTracks";
+import { useTrackSearch } from "./hooks/useTrackSearch";
 import type { Track, ViewMode } from "./types";
+import { mockRecentSearches } from "./mock/mockTracks";
 
 /**
- * Step 1: static UI scaffold. State here is intentionally shallow and local —
- * it exists only to make the layout interactive to look at. The real
- * data-fetching, debouncing, pagination-cursor, and storage logic land in a
- * later step behind these same component props, so nothing here should need
- * to change shape when that happens.
+ * Step: the search results panel is now backed by `soundApiClient` (via
+ * `useTrackSearch`) instead of a static mock array. Recent-searches
+ * persistence and the view-mode-remembered-across-visits bonus still live
+ * here as local state for now — those are the next step.
  */
 export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedTrack, setSelectedTrack] = useState<Track | undefined>();
   const [isPlaying, setIsPlaying] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>(mockRecentSearches);
-  const [status] = useState<"idle" | "loading" | "error" | "ready">("ready");
 
-  const handleSearch = (term: string) => {
+  const recordSearch = (term: string) => {
     setRecentSearches((prev) => {
       const deduped = prev.filter((t) => t.toLowerCase() !== term.toLowerCase());
       return [term, ...deduped].slice(0, 5);
     });
   };
+
+  const {
+    query,
+    tracks,
+    status,
+    errorMessage,
+    hasNext,
+    hasPrevious,
+    updateQuery,
+    submitSearch,
+    goNext,
+    goPrevious,
+    retry,
+  } = useTrackSearch(recordSearch);
 
   const handleSelectTrack = (track: Track) => {
     setSelectedTrack(track);
@@ -50,17 +63,20 @@ export default function App() {
       >
         <Box sx={{ minHeight: 480 }}>
           <SearchPanel
-            tracks={mockTracks}
+            tracks={tracks}
             viewMode={viewMode}
             selectedTrackId={selectedTrack?.id}
             status={status}
-            hasPrevious={false}
-            hasNext={true}
-            onSearch={handleSearch}
+            errorMessage={errorMessage}
+            hasPrevious={hasPrevious}
+            hasNext={hasNext}
+            query={query}
+            onQueryChange={updateQuery}
+            onSubmitSearch={submitSearch}
             onSelectTrack={handleSelectTrack}
-            onRetry={() => {}}
-            onPrevious={() => {}}
-            onNext={() => {}}
+            onRetry={retry}
+            onPrevious={goPrevious}
+            onNext={goNext}
             onViewModeChange={setViewMode}
           />
         </Box>
@@ -74,10 +90,7 @@ export default function App() {
         </Box>
 
         <Box sx={{ minHeight: 480 }}>
-          <RecentSearchesPanel
-            searches={recentSearches}
-            onSelect={handleSearch}
-          />
+          <RecentSearchesPanel searches={recentSearches} onSelect={submitSearch} />
         </Box>
       </Box>
     </Box>
