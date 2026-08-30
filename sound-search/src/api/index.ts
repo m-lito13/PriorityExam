@@ -1,5 +1,5 @@
 import type { SoundApiClient } from "./types";
-import { MockSoundApiClient } from "./mockSoundApiClient";
+import { MixcloudSoundApiClient } from "./mixcloudSoundApiClient";
 
 export type { SearchOptions, SearchResponse, SoundApiClient } from "./types";
 export { SoundApiError, isAbortError } from "./errors";
@@ -11,4 +11,4 @@ export { SoundApiError, isAbortError } from "./errors";
  * SoundApiClient` alongside this file and change the line below — no
  * other file in the app needs to change.
  */
-export const soundApiClient: SoundApiClient = new MockSoundApiClient();
+export const soundApiClient: SoundApiClient = new MixcloudSoundApiClient();

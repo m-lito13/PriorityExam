@@ -125,22 +125,42 @@ export function ImagePanel({ track, isPlaying, onImageClick }: ImagePanelProps) 
         sx={{
           width: "100%",
           borderRadius: 2,
-          border: `1px dashed ${customColors.hairline}`,
-          minHeight: 96,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "text.secondary",
-          px: 2,
+          overflow: "hidden",
+          border: `1px solid ${customColors.hairline}`,
+          minHeight: 120,
         }}
       >
-        <Typography variant="caption" sx={{ textAlign: "center" }}>
-          {track
-            ? isPlaying
-              ? "player embed goes here"
-              : "click the image to load & play the embed"
-            : "embed will appear once a track is selected"}
-        </Typography>
+        {track && isPlaying ? (
+          <Box
+            component="iframe"
+            key={track.id}
+            title={`${track.name} by ${track.artist} — Mixcloud player`}
+            src={track.embedUrl}
+            width="100%"
+            height="120"
+            frameBorder={0}
+            allow="autoplay"
+            sx={{ display: "block", border: "none" }}
+          />
+        ) : (
+          <Box
+            sx={{
+              minHeight: 120,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "text.secondary",
+              px: 2,
+              textAlign: "center",
+            }}
+          >
+            <Typography variant="caption">
+              {track
+                ? "click the image to load & play the embed"
+                : "embed will appear once a track is selected"}
+            </Typography>
+          </Box>
+        )}
       </Box>
     </Paper>
   );
