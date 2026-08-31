@@ -5,11 +5,11 @@ import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import HistoryIcon from "@mui/icons-material/History";
 import { SearchPanel } from "./components/SearchPanel";
 import { RecentSearchesPanel } from "./components/RecentSearchesPanel";
+import { TrackPanel } from "./components/TrackPanel";
 import { useTrackSearch } from "./hooks/useTrackSearch";
 import { useRecentSearches } from "./hooks/useRecentSearches";
 import { useIsMobileDevice } from "./hooks/useIsMobileDevice";
 import type { Track, ViewMode } from "./types";
-import { TrackPanel } from "./components/TrackPanel";
 
 export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
@@ -17,7 +17,6 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
-  // 1. Hardware detection for touch mobile devices
   const isMobileDevice = useIsMobileDevice();
 
   const { recentSearches, recordSearch } = useRecentSearches();
@@ -51,8 +50,11 @@ export default function App() {
         display: "flex",
         flexDirection: "column",
         minWidth: 320,
-        height: "100dvh",
-        overflow: "hidden",
+        height: isMobileDevice ? "100dvh" : { xs: "auto", md: "100dvh" },
+        // Guarantees desktop panels never squish below 550px vertical height
+        minHeight: isMobileDevice ? undefined : { md: 550 },
+        // Switches to browser page scrolling only when window height < 550px
+        overflowY: isMobileDevice ? "hidden" : "auto",
       }}
     >
       <Box
@@ -62,14 +64,11 @@ export default function App() {
           minHeight: 0,
           p: { xs: 2, md: 3 },
           gap: 2.5,
-          // Mobile hardware uses block display for tab switching;
-          // Desktop uses flex/grid responsive reflow
           display: isMobileDevice ? "block" : "flex",
           flexDirection: { xs: "column", md: "row" },
-          overflowY: isMobileDevice ? "hidden" : { xs: "auto", md: "hidden" },
         }}
       >
-        {/* Panel 1: Search */}
+        {/* Search Panel */}
         {(!isMobileDevice || activeTab === 0) && (
           <Box
             sx={{
@@ -99,7 +98,7 @@ export default function App() {
           </Box>
         )}
 
-        {/* Panel 2: Track Details */}
+        {/* Track Details Panel */}
         {(!isMobileDevice || activeTab === 1) && (
           <Box
             sx={{
@@ -117,7 +116,7 @@ export default function App() {
           </Box>
         )}
 
-        {/* Panel 3: Recent Searches */}
+        {/* Recent Searches Panel */}
         {(!isMobileDevice || activeTab === 2) && (
           <Box
             sx={{
@@ -132,7 +131,7 @@ export default function App() {
         )}
       </Box>
 
-      {/* Rendered only on physical mobile devices */}
+      {/* Rendered exclusively on touch-first mobile hardware */}
       {isMobileDevice && (
         <Paper elevation={3} sx={{ flexShrink: 0 }}>
           <BottomNavigation
