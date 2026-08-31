@@ -3,6 +3,7 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { WaveformBars } from "./WaveformBars";
 import { customColors } from "../theme/theme";
 import type { Track } from "../types";
+import { useRef, useEffect } from "react";
 
 interface ImagePanelProps {
   track?: Track;
@@ -10,7 +11,41 @@ interface ImagePanelProps {
   onImageClick: () => void;
 }
 
+// Ambient type declaration to resolve 'window.Mixcloud' build errors
+declare global {
+  interface Window {
+    Mixcloud?: {
+      PlayerWidget: (iframe: HTMLIFrameElement) => {
+        ready: Promise<void>;
+        play: () => Promise<void>;
+      };
+    };
+  }
+}
+
 export function TrackPanel({ track, isPlaying, onImageClick }: ImagePanelProps) {
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  // Dynamically inject the Mixcloud Widget SDK script if missing
+  useEffect(() => {
+    if (!window.Mixcloud) {
+      const script = document.createElement("script");
+      script.src = "https://widget.mixcloud.com/media/js/widgetApi.js";
+      script.async = true;
+      document.head.appendChild(script);
+    }
+  }, []);
+
+  const handleIframeLoad = () => {
+    if (!iframeRef.current || !window.Mixcloud) return;
+
+    const widget = window.Mixcloud.PlayerWidget(iframeRef.current);
+
+    widget.ready
+      .then(() => widget.play())
+      .catch((err) => console.error("Mixcloud play failed", err));
+  };
+
   return (
     <Paper
       component="section"
@@ -146,6 +181,8 @@ export function TrackPanel({ track, isPlaying, onImageClick }: ImagePanelProps) 
       >
         {track && isPlaying ? (
           <Box
+            ref={iframeRef}
+            onLoad={handleIframeLoad}
             component="iframe"
             key={track.id}
             title={`${track.name} by ${track.artist} — Mixcloud player`}

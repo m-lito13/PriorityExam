@@ -7,10 +7,6 @@ import { useRecentSearches } from "./hooks/useRecentSearches";
 import type { Track, ViewMode } from "./types";
 import { TrackPanel } from "./components/TrackPanel";
 
-// Below this size, the layout stops trying to reflow further and the
-// browser just scrolls instead — this is the floor the design is meant to
-// look right at (roughly a small phone). Bump these if you want a
-// different floor.
 const MIN_LAYOUT_WIDTH = 360;
 const MIN_LAYOUT_HEIGHT = 640;
 
@@ -43,13 +39,6 @@ export default function App() {
   };
 
   return (
-    // The fixed-height, hidden-overflow "dashboard" behavior (panels fill
-    // the screen and scroll internally) only makes sense once the 3-column
-    // layout kicks in at md. Below md the panels stack, so three full
-    // panels are always taller than one screen — forcing a fixed height
-    // there just clips content. So all of the height/overflow rules below
-    // are md-only; omitted below md, everything defaults back to normal
-    // content-sized, scrollable document flow.
     <Box
       sx={{
         display: "flex",
@@ -57,10 +46,6 @@ export default function App() {
         minWidth: MIN_LAYOUT_WIDTH,
         minHeight: { xs: MIN_LAYOUT_HEIGHT, md: "100dvh" },
         height: { md: "100dvh" },
-        // Below the floor, the App box itself becomes wider/taller than
-        // the real viewport — that's what makes the *browser* show a
-        // scrollbar (default overflow on html/body), instead of this app
-        // trying to compress content past a size it was designed for.
         overflowY: { md: "hidden" },
       }}
     >
@@ -71,13 +56,13 @@ export default function App() {
           minWidth: 0,
           minHeight: { md: 0 },
           overflow: { md: "hidden" },
-          display: "grid",
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
           gap: 2.5,
           p: { xs: 2, md: 3 },
-          gridTemplateColumns: { xs: "1fr", md: "1.3fr 1fr 1fr" },
         }}
       >
-        <Box sx={{ minWidth: 0, height: { md: "100%" }, minHeight: { md: 0 } }}>
+        <Box sx={{ flex: { md: 1.3 }, minWidth: 0, height: { md: "100%" }, minHeight: { md: 0 } }}>
           <SearchPanel
             tracks={tracks}
             viewMode={viewMode}
@@ -97,7 +82,7 @@ export default function App() {
           />
         </Box>
 
-        <Box sx={{ minWidth: 0, height: { md: "100%" }, minHeight: { md: 0 } }}>
+        <Box sx={{ flex: { md: 1 }, minWidth: 0, height: { md: "100%" }, minHeight: { md: 0 } }}>
           <TrackPanel
             track={selectedTrack}
             isPlaying={isPlaying}
@@ -105,7 +90,7 @@ export default function App() {
           />
         </Box>
 
-        <Box sx={{ minWidth: 0, height: { md: "100%" }, minHeight: { md: 0 } }}>
+        <Box sx={{ flex: { md: 1 }, minWidth: 0, height: { md: "100%" }, minHeight: { md: 0 } }}>
           <RecentSearchesPanel searches={recentSearches} onSelect={submitSearch} />
         </Box>
       </Box>
