@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { readJson, writeJson } from "../utils/localStorage";
 import { mockRecentSearches } from "../mock/mockTracks";
-//import { mockRecentSearches } from "../mock/mockRecentSearches";
+
 
 const STORAGE_KEY = "sound-search:recent-searches";
 const MAX_ENTRIES = 5;
@@ -34,7 +34,8 @@ export function useRecentSearches() {
   function recordSearch(term: string) {
     setRecentSearches((prev) => {
       const deduped = prev.filter((t) => t.toLowerCase() !== term.toLowerCase());
-      return [term, ...deduped].slice(0, MAX_ENTRIES);
+      const next = [term, ...deduped].slice(0, MAX_ENTRIES);
+      return next;
     });
   }
 

@@ -1,12 +1,18 @@
 import { useState } from "react";
 import { Box } from "@mui/material";
-import { AppHeader } from "./components/AppHeader";
 import { SearchPanel } from "./components/SearchPanel";
 import { ImagePanel } from "./components/ImagePanel";
 import { RecentSearchesPanel } from "./components/RecentSearchesPanel";
 import { useTrackSearch } from "./hooks/useTrackSearch";
 import { useRecentSearches } from "./hooks/useRecentSearches";
 import type { Track, ViewMode } from "./types";
+
+// Below this size, the layout stops trying to reflow further and the
+// browser just scrolls instead — this is the floor the design is meant to
+// look right at (roughly a small phone). Bump these if you want a
+// different floor.
+const MIN_LAYOUT_WIDTH = 360;
+const MIN_LAYOUT_HEIGHT = 640;
 
 export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
@@ -27,11 +33,13 @@ export default function App() {
     goNext,
     goPrevious,
     retry,
+    notifyResultSelected,
   } = useTrackSearch(recordSearch);
 
   const handleSelectTrack = (track: Track) => {
     setSelectedTrack(track);
     setIsPlaying(false);
+    notifyResultSelected();
   };
 
   return (
@@ -46,14 +54,16 @@ export default function App() {
       sx={{
         display: "flex",
         flexDirection: "column",
-        minHeight: "100dvh",
+        minWidth: MIN_LAYOUT_WIDTH,
+        minHeight: { xs: MIN_LAYOUT_HEIGHT, md: "100dvh" },
         height: { md: "100dvh" },
-        overflowX: "hidden",
+        // Below the floor, the App box itself becomes wider/taller than
+        // the real viewport — that's what makes the *browser* show a
+        // scrollbar (default overflow on html/body), instead of this app
+        // trying to compress content past a size it was designed for.
         overflowY: { md: "hidden" },
       }}
     >
-      <AppHeader />
-
       <Box
         component="main"
         sx={{
