@@ -28,7 +28,20 @@ export function SearchPanel(props: SearchPanelProps) {
       component="section"
       aria-labelledby="search-panel-heading"
       elevation={0}
-      sx={{ p: { xs: 2, md: 2.5 }, display: "flex", flexDirection: "column", height: "100%" }}
+      sx={{
+        p: { xs: 2, md: 2.5 },
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        minWidth: 0,
+        height: { md: "100%" },
+        // Flex items default to min-height: auto (= their content's size),
+        // which stops them ever shrinking below that — exactly what was
+        // blocking the results list from scrolling. This overrides it, but
+        // only at md — below that the panel is meant to size to its
+        // content and let the page scroll instead.
+        minHeight: { md: 0 },
+      }}
     >
       <Typography
         id="search-panel-heading"
@@ -44,7 +57,7 @@ export function SearchPanel(props: SearchPanelProps) {
         onSubmit={props.onSubmitSearch}
       />
 
-      <Box sx={{ flex: 1, mt: 2, overflowY: "auto" }}>
+      <Box sx={{ flex: 1, minWidth: 0, minHeight: { md: 0 }, mt: 2, overflowY: "auto" }}>
         <SearchResults
           tracks={props.tracks}
           viewMode={props.viewMode}

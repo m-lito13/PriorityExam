@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { soundApiClient, isAbortError, SoundApiError } from "../api";
 import type { Track } from "../types";
 
@@ -33,8 +33,15 @@ interface UseTrackSearchResult {
  *    stale response can never overwrite what the user is currently looking at
  *  - tracks loading/error/ready status for the view to render
  *
- * `onCommitted` is called once per *executed* search (not per keystroke) so
- * the caller can push it into recent-search history.
+ * `onCommitted` is called once per *explicitly submitted* search — Enter,
+ * the Go button, or clicking a recent-search entry — never from the
+ * live-as-you-type debounce path, so a mid-word pause can't leak a partial
+ * term into history.
+ *
+ * Note: no useCallback here. Nothing downstream is wrapped in React.memo,
+ * so memoizing these handlers wouldn't skip any renders — it'd just be
+ * extra bookkeeping. Plain functions redefined each render close over the
+ * current state just as correctly, and are simpler to read.
  */
 export function useTrackSearch(onCommitted: (term: string) => void): UseTrackSearchResult {
   const [query, setQuery] = useState("");
@@ -48,9 +55,8 @@ export function useTrackSearch(onCommitted: (term: string) => void): UseTrackSea
   // Survive re-renders without themselves triggering one.
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<number | undefined>(undefined);
-  const activeTermRef = useRef<string>("");
 
-  const fetchPage = useCallback((term: string, pageCursor: string | null) => {
+  function fetchPage(term: string, pageCursor: string | null) {
     const trimmed = term.trim();
     if (!trimmed) {
       abortControllerRef.current?.abort();
@@ -66,7 +72,6 @@ export function useTrackSearch(onCommitted: (term: string) => void): UseTrackSea
     abortControllerRef.current?.abort();
     const controller = new AbortController();
     abortControllerRef.current = controller;
-    activeTermRef.current = trimmed;
 
     setStatus("loading");
     setErrorMessage(undefined);
@@ -86,56 +91,47 @@ export function useTrackSearch(onCommitted: (term: string) => void): UseTrackSea
           err instanceof SoundApiError ? err.message : "Something went wrong. Please try again.",
         );
       });
-  }, []);
+  }
 
-  const commit = useCallback(
-    (term: string, recordHistory: boolean) => {
-      window.clearTimeout(debounceTimerRef.current);
-      setCursor(null);
-      fetchPage(term, null);
-      // History should reflect what the user actually meant to search for,
-      // not whatever partial word the debounce happened to fire on — so
-      // only an explicit submit (submitSearch) logs it, never the
-      // live-as-you-type debounce path below.
-      if (recordHistory && term.trim()) onCommitted(term.trim());
-    },
-    [fetchPage, onCommitted],
-  );
+  function commit(term: string, recordHistory: boolean) {
+    window.clearTimeout(debounceTimerRef.current);
+    setCursor(null);
+    fetchPage(term, null);
+    // History should reflect what the user actually meant to search for,
+    // not whatever partial word the debounce happened to fire on — so
+    // only an explicit submit (submitSearch) logs it, never the
+    // live-as-you-type debounce path below.
+    if (recordHistory && term.trim()) onCommitted(term.trim());
+  }
 
-  const updateQuery = useCallback(
-    (value: string) => {
-      setQuery(value);
-      window.clearTimeout(debounceTimerRef.current);
-      debounceTimerRef.current = window.setTimeout(() => {
-        commit(value, false);
-      }, DEBOUNCE_MS);
-    },
-    [commit],
-  );
+  function updateQuery(value: string) {
+    setQuery(value);
+    window.clearTimeout(debounceTimerRef.current);
+    debounceTimerRef.current = window.setTimeout(() => {
+      commit(value, false);
+    }, DEBOUNCE_MS);
+  }
 
-  const submitSearch = useCallback(
-    (value: string) => {
-      setQuery(value);
-      commit(value, true);
-    },
-    [commit],
-  );
+  function submitSearch(value: string) {
+    setQuery(value);
+    commit(value, true);
+  }
 
-  const goNext = useCallback(() => {
+  function goNext() {
     if (!nextCursor) return;
     setCursor(nextCursor);
     fetchPage(query, nextCursor);
-  }, [nextCursor, query, fetchPage]);
+  }
 
-  const goPrevious = useCallback(() => {
+  function goPrevious() {
     if (!previousCursor) return;
     setCursor(previousCursor);
     fetchPage(query, previousCursor);
-  }, [previousCursor, query, fetchPage]);
+  }
 
-  const retry = useCallback(() => {
+  function retry() {
     fetchPage(query, cursor);
-  }, [fetchPage, query, cursor]);
+  }
 
   useEffect(() => {
     return () => {

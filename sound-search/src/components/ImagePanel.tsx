@@ -21,7 +21,11 @@ export function ImagePanel({ track, isPlaying, onImageClick }: ImagePanelProps) 
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        height: "100%",
+        width: "100%",
+        minWidth: 0,
+        height: { md: "100%" },
+        minHeight: { md: 0 },
+        overflowY: "auto",
       }}
     >
       <Typography variant="overline" sx={{ color: "text.secondary", alignSelf: "flex-start", mb: 1.5 }}>
@@ -112,12 +116,22 @@ export function ImagePanel({ track, isPlaying, onImageClick }: ImagePanelProps) 
 
       <Typography
         variant="h6"
-        sx={{ mt: 2, textAlign: "center", minHeight: 28 }}
-        noWrap
+        sx={{
+          mt: 2,
+          width: "100%",
+          textAlign: "center",
+          minHeight: 28,
+          overflowWrap: "break-word",
+          wordBreak: "break-word",
+        }}
       >
         {track ? track.name : "—"}
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+      <Typography
+        variant="body2"
+        color="text.secondary"
+        sx={{ mb: 2, width: "100%", textAlign: "center", overflowWrap: "break-word" }}
+      >
         {track ? track.artist : "no track selected"}
       </Typography>
 

@@ -1,4 +1,4 @@
-import { type FormEvent } from "react";
+import type { FormEvent } from "react";
 import { Box, Button, InputBase, Paper } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { customColors } from "../theme/theme";
@@ -33,6 +33,7 @@ export function SearchBar({ value, onChange, onSubmit }: SearchBarProps) {
         variant="outlined"
         sx={{
           flex: 1,
+          minWidth: 0,
           display: "flex",
           alignItems: "center",
           px: 1.5,

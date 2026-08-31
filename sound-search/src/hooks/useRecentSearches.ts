@@ -1,0 +1,42 @@
+import { useEffect, useState } from "react";
+import { readJson, writeJson } from "../utils/localStorage";
+import { mockRecentSearches } from "../mock/mockTracks";
+//import { mockRecentSearches } from "../mock/mockRecentSearches";
+
+const STORAGE_KEY = "sound-search:recent-searches";
+const MAX_ENTRIES = 5;
+
+function isStringArray(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((v) => typeof v === "string");
+}
+
+function loadInitial(): string[] {
+  // Falls back to the seed list only when nothing has ever been saved
+  // (fresh browser/profile) — a real prior visit's empty history should
+  // stay empty, not get re-seeded with mock terms.
+  const hasStoredValue = window.localStorage.getItem(STORAGE_KEY) !== null;
+  if (!hasStoredValue) return mockRecentSearches;
+  return readJson(STORAGE_KEY, [], isStringArray);
+}
+
+/**
+ * Recent-search history, persisted across visits. State lives here; the
+ * component layer only ever sees `recentSearches` and calls `recordSearch`
+ * on an explicit search — it doesn't know or care that localStorage exists.
+ */
+export function useRecentSearches() {
+  const [recentSearches, setRecentSearches] = useState<string[]>(loadInitial);
+
+  useEffect(() => {
+    writeJson(STORAGE_KEY, recentSearches);
+  }, [recentSearches]);
+
+  function recordSearch(term: string) {
+    setRecentSearches((prev) => {
+      const deduped = prev.filter((t) => t.toLowerCase() !== term.toLowerCase());
+      return [term, ...deduped].slice(0, MAX_ENTRIES);
+    });
+  }
+
+  return { recentSearches, recordSearch };
+}

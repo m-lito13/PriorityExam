@@ -1,24 +1,19 @@
 import { useState } from "react";
 import { Box } from "@mui/material";
+import { AppHeader } from "./components/AppHeader";
 import { SearchPanel } from "./components/SearchPanel";
 import { ImagePanel } from "./components/ImagePanel";
 import { RecentSearchesPanel } from "./components/RecentSearchesPanel";
 import { useTrackSearch } from "./hooks/useTrackSearch";
+import { useRecentSearches } from "./hooks/useRecentSearches";
 import type { Track, ViewMode } from "./types";
-import { mockRecentSearches } from "./mock/mockTracks";
 
 export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedTrack, setSelectedTrack] = useState<Track | undefined>();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<string[]>(mockRecentSearches);
 
-  const recordSearch = (term: string) => {
-    setRecentSearches((prev) => {
-      const deduped = prev.filter((t) => t.toLowerCase() !== term.toLowerCase());
-      return [term, ...deduped].slice(0, 5);
-    });
-  };
+  const { recentSearches, recordSearch } = useRecentSearches();
 
   const {
     query,
@@ -40,46 +35,39 @@ export default function App() {
   };
 
   return (
+    // The fixed-height, hidden-overflow "dashboard" behavior (panels fill
+    // the screen and scroll internally) only makes sense once the 3-column
+    // layout kicks in at md. Below md the panels stack, so three full
+    // panels are always taller than one screen — forcing a fixed height
+    // there just clips content. So all of the height/overflow rules below
+    // are md-only; omitted below md, everything defaults back to normal
+    // content-sized, scrollable document flow.
     <Box
       sx={{
-        height: { xs: "100dvh", md: "auto" },
-        minHeight: "100dvh",
         display: "flex",
         flexDirection: "column",
-        overflow: "hidden",
+        minHeight: "100dvh",
+        height: { md: "100dvh" },
+        overflowX: "hidden",
+        overflowY: { md: "hidden" },
       }}
     >
-      {/* <AppHeader /> */}
+      <AppHeader />
 
       <Box
         component="main"
         sx={{
           flex: 1,
+          minWidth: 0,
+          minHeight: { md: 0 },
+          overflow: { md: "hidden" },
           display: "grid",
-          gap: { xs: 1.5, md: 2.5 },
-          p: { xs: 1.5, md: 3 },
-          // Equal 3-row split on mobile, side-by-side columns on larger screens
-          gridTemplateColumns: {
-            xs: "1fr",
-            md: "1fr 1fr",
-            lg: "1.3fr 1fr 1fr",
-          },
-          gridTemplateRows: {
-            xs: "repeat(3, minmax(0, 1fr))",
-            md: "none",
-          },
-          alignItems: "stretch",
-          height: { xs: "100%", md: "auto" },
+          gap: 2.5,
+          p: { xs: 2, md: 3 },
+          gridTemplateColumns: { xs: "1fr", md: "1.3fr 1fr 1fr" },
         }}
       >
-        <Box
-          sx={{
-            minHeight: 0,
-            minWidth: 0,
-            overflowY: "auto",
-            gridColumn: { xs: "span 1", md: "span 2", lg: "span 1" },
-          }}
-        >
+        <Box sx={{ minWidth: 0, height: { md: "100%" }, minHeight: { md: 0 } }}>
           <SearchPanel
             tracks={tracks}
             viewMode={viewMode}
@@ -99,13 +87,7 @@ export default function App() {
           />
         </Box>
 
-        <Box
-          sx={{
-            minHeight: 0,
-            minWidth: 0,
-            overflowY: "auto",
-          }}
-        >
+        <Box sx={{ minWidth: 0, height: { md: "100%" }, minHeight: { md: 0 } }}>
           <ImagePanel
             track={selectedTrack}
             isPlaying={isPlaying}
@@ -113,13 +95,7 @@ export default function App() {
           />
         </Box>
 
-        <Box
-          sx={{
-            minHeight: 0,
-            minWidth: 0,
-            overflowY: "auto",
-          }}
-        >
+        <Box sx={{ minWidth: 0, height: { md: "100%" }, minHeight: { md: 0 } }}>
           <RecentSearchesPanel searches={recentSearches} onSelect={submitSearch} />
         </Box>
       </Box>

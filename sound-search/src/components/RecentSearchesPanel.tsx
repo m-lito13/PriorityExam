@@ -13,7 +13,14 @@ export function RecentSearchesPanel({ searches, onSelect }: RecentSearchesPanelP
       component="section"
       aria-labelledby="recent-searches-heading"
       elevation={0}
-      sx={{ p: { xs: 2, md: 2.5 }, height: "100%" }}
+      sx={{
+        p: { xs: 2, md: 2.5 },
+        width: "100%",
+        minWidth: 0,
+        height: { md: "100%" },
+        minHeight: { md: 0 },
+        overflowY: "auto",
+      }}
     >
       <Typography
         id="recent-searches-heading"
