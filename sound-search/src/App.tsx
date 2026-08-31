@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, BottomNavigation, BottomNavigationAction, Paper, useMediaQuery, useTheme } from "@mui/material";
+import { Box, BottomNavigation, BottomNavigationAction, Paper } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import HistoryIcon from "@mui/icons-material/History";
@@ -7,11 +7,9 @@ import { SearchPanel } from "./components/SearchPanel";
 import { RecentSearchesPanel } from "./components/RecentSearchesPanel";
 import { useTrackSearch } from "./hooks/useTrackSearch";
 import { useRecentSearches } from "./hooks/useRecentSearches";
+import { useIsMobileDevice } from "./hooks/useIsMobileDevice";
 import type { Track, ViewMode } from "./types";
 import { TrackPanel } from "./components/TrackPanel";
-
-// const MIN_LAYOUT_WIDTH = 360;
-// const MIN_LAYOUT_HEIGHT = 640;
 
 export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
@@ -19,8 +17,8 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  // Detects real mobile hardware vs. resized desktop window
+  const isMobileDevice = useIsMobileDevice();
 
   const { recentSearches, recordSearch } = useRecentSearches();
   const {
@@ -42,8 +40,8 @@ export default function App() {
     setSelectedTrack(track);
     setIsPlaying(false);
     notifyResultSelected();
-    if (isMobile) {
-      setActiveTab(1); // Auto-switch to Now Playing tab on selection on mobile
+    if (isMobileDevice) {
+      setActiveTab(1);
     }
   };
 
@@ -53,7 +51,7 @@ export default function App() {
         component="main"
         sx={{
           flex: 1,
-          display: isMobile ? "block" : "grid",
+          display: isMobileDevice ? "block" : "grid",
           gridTemplateColumns: "1.3fr 1fr 1fr",
           gap: 2.5,
           p: { xs: 2, md: 3 },
@@ -61,7 +59,7 @@ export default function App() {
           overflow: "hidden",
         }}
       >
-        {(!isMobile || activeTab === 0) && (
+        {(!isMobileDevice || activeTab === 0) && (
           <Box sx={{ height: "100%", minHeight: 0 }}>
             <SearchPanel
               tracks={tracks}
@@ -83,7 +81,7 @@ export default function App() {
           </Box>
         )}
 
-        {(!isMobile || activeTab === 1) && (
+        {(!isMobileDevice || activeTab === 1) && (
           <Box sx={{ height: "100%", minHeight: 0 }}>
             <TrackPanel
               track={selectedTrack}
@@ -93,15 +91,15 @@ export default function App() {
           </Box>
         )}
 
-        {(!isMobile || activeTab === 2) && (
+        {(!isMobileDevice || activeTab === 2) && (
           <Box sx={{ height: "100%", minHeight: 0 }}>
             <RecentSearchesPanel searches={recentSearches} onSelect={submitSearch} />
           </Box>
         )}
       </Box>
 
-      {/* Rendered exclusively on mobile viewports */}
-      {isMobile && (
+      {/* Renders bottom tabs ONLY on physical mobile devices */}
+      {isMobileDevice && (
         <Paper elevation={3} sx={{ flexShrink: 0 }}>
           <BottomNavigation
             showLabels
