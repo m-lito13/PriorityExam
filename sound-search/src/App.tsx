@@ -17,7 +17,7 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
-  // Detects real mobile hardware vs. resized desktop window
+  // 1. Hardware detection for touch mobile devices
   const isMobileDevice = useIsMobileDevice();
 
   const { recentSearches, recordSearch } = useRecentSearches();
@@ -46,21 +46,39 @@ export default function App() {
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        minWidth: 320,
+        height: "100dvh",
+        overflow: "hidden",
+      }}
+    >
       <Box
         component="main"
         sx={{
           flex: 1,
-          display: isMobileDevice ? "block" : "grid",
-          gridTemplateColumns: "1.3fr 1fr 1fr",
-          gap: 2.5,
-          p: { xs: 2, md: 3 },
           minHeight: 0,
-          overflow: "hidden",
+          p: { xs: 2, md: 3 },
+          gap: 2.5,
+          // Mobile hardware uses block display for tab switching;
+          // Desktop uses flex/grid responsive reflow
+          display: isMobileDevice ? "block" : "flex",
+          flexDirection: { xs: "column", md: "row" },
+          overflowY: isMobileDevice ? "hidden" : { xs: "auto", md: "hidden" },
         }}
       >
+        {/* Panel 1: Search */}
         {(!isMobileDevice || activeTab === 0) && (
-          <Box sx={{ height: "100%", minHeight: 0 }}>
+          <Box
+            sx={{
+              flex: { md: 1.3 },
+              minWidth: 0,
+              height: isMobileDevice ? "100%" : { xs: "auto", md: "100%" },
+              minHeight: { md: 0 },
+            }}
+          >
             <SearchPanel
               tracks={tracks}
               viewMode={viewMode}
@@ -81,8 +99,16 @@ export default function App() {
           </Box>
         )}
 
+        {/* Panel 2: Track Details */}
         {(!isMobileDevice || activeTab === 1) && (
-          <Box sx={{ height: "100%", minHeight: 0 }}>
+          <Box
+            sx={{
+              flex: { md: 1 },
+              minWidth: 0,
+              height: isMobileDevice ? "100%" : { xs: "auto", md: "100%" },
+              minHeight: { md: 0 },
+            }}
+          >
             <TrackPanel
               track={selectedTrack}
               isPlaying={isPlaying}
@@ -91,14 +117,22 @@ export default function App() {
           </Box>
         )}
 
+        {/* Panel 3: Recent Searches */}
         {(!isMobileDevice || activeTab === 2) && (
-          <Box sx={{ height: "100%", minHeight: 0 }}>
+          <Box
+            sx={{
+              flex: { md: 1 },
+              minWidth: 0,
+              height: isMobileDevice ? "100%" : { xs: "auto", md: "100%" },
+              minHeight: { md: 0 },
+            }}
+          >
             <RecentSearchesPanel searches={recentSearches} onSelect={submitSearch} />
           </Box>
         )}
       </Box>
 
-      {/* Renders bottom tabs ONLY on physical mobile devices */}
+      {/* Rendered only on physical mobile devices */}
       {isMobileDevice && (
         <Paper elevation={3} sx={{ flexShrink: 0 }}>
           <BottomNavigation
