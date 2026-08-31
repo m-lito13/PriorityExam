@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Box } from "@mui/material";
 import { SearchPanel } from "./components/SearchPanel";
-import { ImagePanel } from "./components/ImagePanel";
 import { RecentSearchesPanel } from "./components/RecentSearchesPanel";
 import { useTrackSearch } from "./hooks/useTrackSearch";
 import { useRecentSearches } from "./hooks/useRecentSearches";
 import type { Track, ViewMode } from "./types";
+import { TrackPanel } from "./components/TrackPanel";
 
 // Below this size, the layout stops trying to reflow further and the
 // browser just scrolls instead — this is the floor the design is meant to
@@ -98,7 +98,7 @@ export default function App() {
         </Box>
 
         <Box sx={{ minWidth: 0, height: { md: "100%" }, minHeight: { md: 0 } }}>
-          <ImagePanel
+          <TrackPanel
             track={selectedTrack}
             isPlaying={isPlaying}
             onImageClick={() => setIsPlaying((p) => !p)}

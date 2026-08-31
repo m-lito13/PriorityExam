@@ -10,7 +10,7 @@ interface ImagePanelProps {
   onImageClick: () => void;
 }
 
-export function ImagePanel({ track, isPlaying, onImageClick }: ImagePanelProps) {
+export function TrackPanel({ track, isPlaying, onImageClick }: ImagePanelProps) {
   return (
     <Paper
       component="section"
