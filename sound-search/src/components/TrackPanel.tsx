@@ -1,10 +1,11 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Box, Paper, Typography, Fade, useTheme } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { WaveformBars } from "./WaveformBars";
 import type { Track } from "../types";
 import { alpha } from "@mui/material/styles";
 import { LAYOUT_CONFIG } from "../const/layout";
+import { panelSurfaceSx } from "../theme/layoutPrimitives";
 
 interface TrackPanelProps {
   track?: Track;
@@ -19,31 +20,96 @@ declare global {
       PlayerWidget: (iframe: HTMLIFrameElement) => {
         ready: Promise<void>;
         play: () => Promise<void>;
+        pause: () => Promise<void>;
+        togglePlay: () => Promise<void>;
+        events: {
+          play: { on: (cb: () => void) => void; off: (cb: () => void) => void };
+          pause: { on: (cb: () => void) => void; off: (cb: () => void) => void };
+          ended: { on: (cb: () => void) => void; off: (cb: () => void) => void };
+        };
       };
     };
   }
 }
 
+const MIXCLOUD_WIDGET_SCRIPT_URL = "https://widget.mixcloud.com/media/js/widgetApi.js";
+
+// Module-level, not component state: the script only needs to be
+// requested once for the whole app's lifetime, even if TrackPanel mounts
+// more than once (e.g. React StrictMode's dev double-invoke).
+let widgetScriptPromise: Promise<void> | null = null;
+
+function loadMixcloudWidgetScript(): Promise<void> {
+  if (window.Mixcloud) return Promise.resolve();
+  if (!widgetScriptPromise) {
+    widgetScriptPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = MIXCLOUD_WIDGET_SCRIPT_URL;
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error("Failed to load the Mixcloud widget script."));
+      document.head.appendChild(script);
+    });
+  }
+  return widgetScriptPromise;
+}
+
 export function TrackPanel({ track, isPlaying, onImageClick }: TrackPanelProps) {
   const theme = useTheme();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const playButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [isActuallyPlaying, setIsActuallyPlaying] = useState(false);
 
   useEffect(() => {
-    if (!window.Mixcloud) {
-      const script = document.createElement("script");
-      script.src = "https://widget.mixcloud.com/media/js/widgetApi.js";
-      script.async = true;
-      document.head.appendChild(script);
+    if (track) {
+      playButtonRef.current?.focus({ preventScroll: true });
     }
+  }, [track?.id]);
+
+  // A newly-selected track always starts unplayed — without this, if the
+  // previous track was mid-playback when a new one got selected, this
+  // state would otherwise carry over and show the waveform on artwork
+  // that hasn't started playing yet.
+  useEffect(() => {
+    setIsActuallyPlaying(false);
+  }, [track?.id]);
+
+  // Kick off the script load as early as possible (on mount) so it's
+  // likely already ready by the time someone actually presses play —
+  // handleIframeLoad below still waits on it properly either way.
+  useEffect(() => {
+    loadMixcloudWidgetScript().catch((err) => {
+      console.error(err);
+    });
   }, []);
 
   const handleIframeLoad = () => {
-    if (!iframeRef.current || !window.Mixcloud) return;
+    // The widget script and the iframe load independently, in no
+    // guaranteed order — on a slow connection the script can easily still
+    // be loading when the iframe fires onLoad. Wait for it explicitly
+    // instead of assuming window.Mixcloud is already there, so autoplay
+    // doesn't just silently fail.
+    loadMixcloudWidgetScript()
+      .then(() => {
+        if (!iframeRef.current || !window.Mixcloud) return;
+        const widget = window.Mixcloud.PlayerWidget(iframeRef.current);
 
-    const widget = window.Mixcloud.PlayerWidget(iframeRef.current);
-
-    widget.ready
-      .then(() => widget.play())
+        // Per Mixcloud's own widget docs: "Until ready resolves, the
+        // object returned by PlayerWidget has no API on it — do your work
+        // inside the then." That includes widget.events, not just
+        // widget.play()/pause() — reading .events before ready resolves
+        // can throw, which silently aborts this whole callback (caught by
+        // the .catch below) before any of it runs, including the ready.then
+        // block that sets isActuallyPlaying. Everything has to live inside
+        // ready.then, event registration included.
+        return widget.ready.then(() => {
+          widget.events.play.on(() => setIsActuallyPlaying(true));
+          widget.events.pause.on(() => setIsActuallyPlaying(false));
+          widget.events.ended.on(() => setIsActuallyPlaying(false));
+          setIsActuallyPlaying(true);
+          return widget.play();
+        });
+      })
       .catch((err) => console.error("Mixcloud play failed", err));
   };
 
@@ -53,15 +119,11 @@ export function TrackPanel({ track, isPlaying, onImageClick }: TrackPanelProps) 
       aria-label="now viewing"
       elevation={0}
       sx={{
+        ...panelSurfaceSx,
         p: { xs: 2, md: 2.5 },
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        width: "100%",
-        minWidth: 0,
-        height: { md: "100%" },
-        minHeight: { md: 0 },
-        overflowY: "auto",
       }}
     >
       <Typography variant="overline" sx={{ color: "text.secondary", alignSelf: "flex-start", mb: 1.5 }}>
@@ -83,6 +145,7 @@ export function TrackPanel({ track, isPlaying, onImageClick }: TrackPanelProps) 
       >
         <Fade in={Boolean(track)} timeout={450} key={track?.id ?? "empty"}>
           <Box
+            ref={playButtonRef}
             component={track ? "button" : "div"}
             onClick={track ? onImageClick : undefined}
             aria-label={track ? `Play ${track.name} by ${track.artist}` : undefined}
@@ -116,14 +179,14 @@ export function TrackPanel({ track, isPlaying, onImageClick }: TrackPanelProps) 
                     alignItems: "center",
                     justifyContent: "center",
                     backgroundColor: (theme) =>
-                      isPlaying
+                      isActuallyPlaying
                         ? alpha(theme.palette.background.default, 0.15)
                         : alpha(theme.palette.background.default, 0.35),
                     transition: "background-color 0.2s ease",
                     "&:hover": { backgroundColor: "rgba(18,20,26,0.15)" },
                   }}
                 >
-                  {isPlaying ? (
+                  {isActuallyPlaying ? (
                     <WaveformBars color={theme.palette.secondary.main} height={28} barCount={5} active />
                   ) : (
                     <PlayArrowIcon sx={{ fontSize: "large", color: "primary.main" }} />
