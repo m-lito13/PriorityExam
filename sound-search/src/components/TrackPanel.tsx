@@ -107,7 +107,13 @@ export function TrackPanel({ track, isPlaying, onImageClick }: TrackPanelProps) 
           widget.events.pause.on(() => setIsActuallyPlaying(false));
           widget.events.ended.on(() => setIsActuallyPlaying(false));
           setIsActuallyPlaying(true);
-          return widget.play();
+          playButtonRef.current?.focus({ preventScroll: true });
+          return widget.play().then(() => {
+            // Belt-and-suspenders: some widgets shift focus again once
+            // playback actually begins (not just once ready), a moment
+            // slightly after the reclaim above.
+            playButtonRef.current?.focus({ preventScroll: true });
+          });
         });
       })
       .catch((err) => console.error("Mixcloud play failed", err));
