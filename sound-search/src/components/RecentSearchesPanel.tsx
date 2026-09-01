@@ -1,5 +1,6 @@
 import { Paper, Typography, List, ListItemButton, ListItemText, Box, useTheme } from "@mui/material";
 import HistoryIcon from "@mui/icons-material/History";
+import { panelSurfaceSx } from "../theme/layoutPrimitives";
 
 interface RecentSearchesPanelProps {
   searches: string[];
@@ -15,12 +16,8 @@ export function RecentSearchesPanel({ searches, onSelect }: RecentSearchesPanelP
       aria-labelledby="recent-searches-heading"
       elevation={0}
       sx={{
+        ...panelSurfaceSx,
         p: { xs: 2, md: 2.5 },
-        width: "100%",
-        minWidth: 0,
-        height: { md: "100%" },
-        minHeight: { md: 0 },
-        overflowY: "auto",
       }}
     >
       <Typography
