@@ -3,7 +3,7 @@ import type { SearchOptions, SearchResponse, SoundApiClient } from "./types";
 import { SoundApiError, isAbortError } from "./errors";
 
 const SEARCH_ENDPOINT = "https://api.mixcloud.com/search/";
-const EMBED_BASE = "https://www.mixcloud.com/widget/iframe/";
+const EMBED_BASE = "https://player-widget.mixcloud.com"; //"https://www.mixcloud.com/widget/iframe/";
 
 // Only the fields we actually read. Mixcloud's real objects have more —
 // deliberately not modeling those, so a schema change there doesn't ripple
@@ -62,6 +62,7 @@ function buildEmbedUrl(showUrl: string): string {
     feed: showUrl,
     hide_cover: "1",
     light: "1",
+    autoplay: "1"
   });
   return `${EMBED_BASE}?${params.toString()}`;
 }
