@@ -3,6 +3,7 @@ import { Box, Button, InputBase, Paper } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { customColors } from "../theme/theme";
 
+
 interface SearchBarProps {
   value: string;
   /** Fired on every keystroke — the caller (useTrackSearch) debounces this. */

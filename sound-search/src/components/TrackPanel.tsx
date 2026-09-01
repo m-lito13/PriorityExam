@@ -1,9 +1,10 @@
 import { Box, Paper, Typography, Fade } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { WaveformBars } from "./WaveformBars";
-import { customColors } from "../theme/theme";
+
 import type { Track } from "../types";
 import { useRef, useEffect } from "react";
+import { customColors } from "../theme/theme";
 
 interface ImagePanelProps {
   track?: Track;

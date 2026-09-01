@@ -1,8 +1,12 @@
-import { useMediaQuery } from "@mui/material";
+// src/hooks/useIsMobileDevice.ts
+import { useTheme } from "@mui/material/styles";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
-export function useIsMobileDevice() {
-  const isTouchPointer = useMediaQuery("(pointer: coarse)");
-  const hasNoHover = useMediaQuery("(hover: none)");
+export function useIsMobileDevice(): boolean {
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTouchDevice = useMediaQuery("(hover: none) and (pointer: coarse)");
 
-  return isTouchPointer && hasNoHover;
+  // Triggers mobile tab UI strictly on small-screen touch hardware
+  return isSmallScreen && isTouchDevice;
 }
