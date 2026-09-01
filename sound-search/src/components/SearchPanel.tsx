@@ -34,30 +34,40 @@ export function SearchPanel(props: SearchPanelProps) {
         flexDirection: "column",
         width: "100%",
         minWidth: 0,
-        height: { md: "100%" },
-        // Flex items default to min-height: auto (= their content's size),
-        // which stops them ever shrinking below that — exactly what was
-        // blocking the results list from scrolling. This overrides it, but
-        // only at md — below that the panel is meant to size to its
-        // content and let the page scroll instead.
-        minHeight: { md: 0 },
+        height: "100%",
+        minHeight: 0,
+        overflow: "hidden",
       }}
     >
+      {/* Pinned Title Header */}
       <Typography
         id="search-panel-heading"
         variant="overline"
-        sx={{ color: "text.secondary", mb: 1.5 }}
+        sx={{ color: "text.secondary", mb: 1.5, flexShrink: 0 }}
       >
         Search
       </Typography>
 
-      <SearchBar
-        value={props.query}
-        onChange={props.onQueryChange}
-        onSubmit={props.onSubmitSearch}
-      />
+      {/* Pinned Search Input */}
+      <Box sx={{ flexShrink: 0 }}>
+        <SearchBar
+          value={props.query}
+          onChange={props.onQueryChange}
+          onSubmit={props.onSubmitSearch}
+        />
+      </Box>
 
-      <Box sx={{ flex: 1, minWidth: 0, minHeight: { md: 0 }, mt: 2, overflowY: "auto" }}>
+      {/* Internal Bounded Middle Scroll Area */}
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          mt: 2,
+          mb: 1,
+          overflowY: "auto",
+          pr: 0.5,
+        }}
+      >
         <SearchResults
           tracks={props.tracks}
           viewMode={props.viewMode}
@@ -69,14 +79,17 @@ export function SearchPanel(props: SearchPanelProps) {
         />
       </Box>
 
-      <ResultsFooterControls
-        viewMode={props.viewMode}
-        onViewModeChange={props.onViewModeChange}
-        onPrevious={props.onPrevious}
-        onNext={props.onNext}
-        hasPrevious={props.hasPrevious}
-        hasNext={props.hasNext}
-      />
+      {/* Pinned Footer Controls */}
+      <Box sx={{ flexShrink: 0, mt: "auto" }}>
+        <ResultsFooterControls
+          viewMode={props.viewMode}
+          onViewModeChange={props.onViewModeChange}
+          onPrevious={props.onPrevious}
+          onNext={props.onNext}
+          hasPrevious={props.hasPrevious}
+          hasNext={props.hasNext}
+        />
+      </Box>
     </Paper>
   );
 }
