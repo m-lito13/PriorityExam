@@ -28,6 +28,14 @@ declare module "@mui/material/styles" {
   interface PaletteOptions {
     app?: { surfaceRaised: string };
   }
+  interface BreakpointOverrides {
+    xs: true;
+    sm: true;
+    md: true;
+    lg: true;
+    xl: true;
+    tablet: true; // Adds custom breakpoint 'tablet'
+  }
 }
 
 export const theme = createTheme({
@@ -55,6 +63,17 @@ export const theme = createTheme({
     divider: palette.hairline,
     app: {
       surfaceRaised: palette.surfaceRaised,
+    },
+    
+  },
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      tablet: 768, // Custom pixel value
+      md: 900,
+      lg: 1200,
+      xl: 1536,
     },
   },
   shape: {

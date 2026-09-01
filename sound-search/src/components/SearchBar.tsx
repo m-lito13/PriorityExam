@@ -41,7 +41,7 @@ export function SearchBar({ value, onChange, onSubmit }: SearchBarProps) {
           backgroundColor: customColors.surfaceRaised,
         }}
       >
-        <SearchIcon sx={{ color: "text.secondary", fontSize: 20, mr: 1 }} />
+        <SearchIcon sx={{ color: "text.secondary", fontSize: "small", mr: 1 }} />
         <InputBase
           fullWidth
           value={value}

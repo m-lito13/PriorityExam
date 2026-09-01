@@ -11,9 +11,8 @@ import { useTrackSearch } from "./hooks/useTrackSearch";
 import { useRecentSearches } from "./hooks/useRecentSearches";
 import { useIsMobileDevice } from "./hooks/useIsMobileDevice";
 import type { Track, ViewMode } from "./types";
+import { LAYOUT_CONFIG } from "./const/layout";
 
-const MIN_LAYOUT_WIDTH = 320;
-const MIN_DESKTOP_HEIGHT = 550;
 const TABS = { search: 0, nowPlaying: 1, history: 2 } as const;
 
 export default function App() {
@@ -22,7 +21,7 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeTab, setActiveTab] = useState<number>(TABS.search);
 
-  // Hook detects strictly phone-sized touch viewports (< 600px)
+  // JS Hook handles phone-specific tab state (< 600px touch screens)
   const isMobileDevice = useIsMobileDevice();
   const { recentSearches, recordSearch } = useRecentSearches();
   const {
@@ -45,21 +44,29 @@ export default function App() {
     setIsPlaying(false);
     notifyResultSelected();
 
-    // Auto-switch tab on phone devices when selecting a track
     if (isMobileDevice) {
       setActiveTab(TABS.nowPlaying);
     }
   };
+
+  // Standardized panel box styles leveraging JS mobile flag & theme breakpoints
+  const panelWrapperSx = {
+    width: "100%",
+    minWidth: 0,
+    minHeight: 0,
+    display: "flex",
+    flexDirection: "column",
+    height: isMobileDevice ? "100%" : { xs: "auto", lg: "100%" },
+  } as const;
 
   return (
     <Box
       sx={{
         display: "flex",
         flexDirection: "column",
-        minWidth: MIN_LAYOUT_WIDTH,
-        // Phones lock to viewport height; Tablets scroll normally; Desktops (>= 1200px) lock height
+        minWidth: LAYOUT_CONFIG.MIN_WIDTH,
         height: isMobileDevice ? "100dvh" : { xs: "auto", lg: "100dvh" },
-        minHeight: isMobileDevice ? undefined : { lg: MIN_DESKTOP_HEIGHT },
+        minHeight: isMobileDevice ? undefined : { lg: LAYOUT_CONFIG.MIN_DESKTOP_HEIGHT },
         overflowX: "hidden",
         overflowY: isMobileDevice ? "hidden" : { xs: "auto", lg: "hidden" },
       }}
@@ -72,24 +79,14 @@ export default function App() {
           p: { xs: 2, md: 3 },
           gap: 2.5,
           display: "flex",
-          // Stack panels vertically on phones & tablets; side-by-side row layout ONLY at >= 1200px (lg)
+          // Stack vertically on phones & tablets; side-by-side row layout ONLY at >= 1200px (lg)
           flexDirection: isMobileDevice ? "column" : { xs: "column", lg: "row" },
           overflow: isMobileDevice ? "hidden" : { xs: "visible", lg: "hidden" },
         }}
       >
         {/* SEARCH PANEL */}
         {(!isMobileDevice || activeTab === TABS.search) && (
-          <Box
-            sx={{
-              flex: { lg: 1.3 },
-              width: "100%",
-              minWidth: 0,
-              height: isMobileDevice ? "100%" : { xs: "auto", lg: "100%" },
-              minHeight: 0,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
+          <Box sx={{ ...panelWrapperSx, flex: { lg: 1.3 } }}>
             <SearchPanel
               tracks={tracks}
               viewMode={viewMode}
@@ -112,17 +109,7 @@ export default function App() {
 
         {/* TRACK PLAYER PANEL */}
         {(!isMobileDevice || activeTab === TABS.nowPlaying) && (
-          <Box
-            sx={{
-              flex: { lg: 1 },
-              width: "100%",
-              minWidth: 0,
-              height: isMobileDevice ? "100%" : { xs: "auto", lg: "100%" },
-              minHeight: 0,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
+          <Box sx={{ ...panelWrapperSx, flex: { lg: 1 } }}>
             <TrackPanel
               track={selectedTrack}
               isPlaying={isPlaying}
@@ -133,17 +120,7 @@ export default function App() {
 
         {/* RECENT SEARCHES PANEL */}
         {(!isMobileDevice || activeTab === TABS.history) && (
-          <Box
-            sx={{
-              flex: { lg: 1 },
-              width: "100%",
-              minWidth: 0,
-              height: isMobileDevice ? "100%" : { xs: "auto", lg: "100%" },
-              minHeight: 0,
-              display: "flex",
-              flexDirection: "column",
-            }}
-          >
+          <Box sx={{ ...panelWrapperSx, flex: { lg: 1 } }}>
             <RecentSearchesPanel searches={recentSearches} onSelect={submitSearch} />
           </Box>
         )}

@@ -1,10 +1,10 @@
-import { Box, Paper, Typography, Fade } from "@mui/material";
+import { useRef, useEffect } from "react";
+import { Box, Paper, Typography, Fade, useTheme } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import { WaveformBars } from "./WaveformBars";
-
 import type { Track } from "../types";
-import { useRef, useEffect } from "react";
-import { customColors } from "../theme/theme";
+import { alpha } from "@mui/material/styles";
+import { LAYOUT_CONFIG } from "../const/layout";
 
 interface ImagePanelProps {
   track?: Track;
@@ -25,6 +25,7 @@ declare global {
 }
 
 export function TrackPanel({ track, isPlaying, onImageClick }: ImagePanelProps) {
+  const theme = useTheme();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   // Dynamically inject the Mixcloud Widget SDK script if missing
@@ -71,13 +72,14 @@ export function TrackPanel({ track, isPlaying, onImageClick }: ImagePanelProps) 
       <Box
         sx={{
           width: "100%",
-          maxWidth: 260,
+          maxWidth: LAYOUT_CONFIG.ARTWORK_MAX_SIZE,
           aspectRatio: "1 / 1",
           borderRadius: 3,
           overflow: "hidden",
           position: "relative",
-          backgroundColor: customColors.surfaceRaised,
-          border: `1px solid ${customColors.hairline}`,
+          backgroundColor: "app.surfaceRaised",
+          border: 1,
+          borderColor: "divider",
         }}
       >
         <Fade in={Boolean(track)} timeout={450} key={track?.id ?? "empty"}>
@@ -94,7 +96,7 @@ export function TrackPanel({ track, isPlaying, onImageClick }: ImagePanelProps) 
               display: "block",
               position: "relative",
               "&:focus-visible": {
-                outline: `3px solid ${customColors.amber}`,
+                outline: `3px solid ${theme.palette.primary.main}`,
                 outlineOffset: -3,
               },
             }}
@@ -114,15 +116,18 @@ export function TrackPanel({ track, isPlaying, onImageClick }: ImagePanelProps) 
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    backgroundColor: isPlaying ? "rgba(18,20,26,0.15)" : "rgba(18,20,26,0.35)",
+                    backgroundColor: (theme) =>
+                      isPlaying
+                        ? alpha(theme.palette.background.default, 0.15)
+                        : alpha(theme.palette.background.default, 0.35),
                     transition: "background-color 0.2s ease",
                     "&:hover": { backgroundColor: "rgba(18,20,26,0.15)" },
                   }}
                 >
                   {isPlaying ? (
-                    <WaveformBars color={customColors.teal} height={28} barCount={5} active />
+                    <WaveformBars color={theme.palette.secondary.main} height={28} barCount={5} active />
                   ) : (
-                    <PlayArrowIcon sx={{ fontSize: 44, color: customColors.amber }} />
+                    <PlayArrowIcon sx={{ fontSize: "large", color: "primary.main" }} />
                   )}
                 </Box>
               </>
@@ -176,8 +181,9 @@ export function TrackPanel({ track, isPlaying, onImageClick }: ImagePanelProps) 
           width: "100%",
           borderRadius: 2,
           overflow: "hidden",
-          border: `1px solid ${customColors.hairline}`,
-          minHeight: 120,
+          border: 1,
+          borderColor: "divider",
+          minHeight: LAYOUT_CONFIG.EMBED_PLAYER_MIN_HEIGHT,
         }}
       >
         {track && isPlaying ? (
@@ -189,7 +195,7 @@ export function TrackPanel({ track, isPlaying, onImageClick }: ImagePanelProps) 
             title={`${track.name} by ${track.artist} — Mixcloud player`}
             src={track.embedUrl}
             width="100%"
-            height="120"
+            height={LAYOUT_CONFIG.EMBED_PLAYER_MIN_HEIGHT}
             frameBorder={0}
             allow="autoplay"
             sx={{ display: "block", border: "none" }}
@@ -197,7 +203,7 @@ export function TrackPanel({ track, isPlaying, onImageClick }: ImagePanelProps) 
         ) : (
           <Box
             sx={{
-              minHeight: 120,
+              minHeight: LAYOUT_CONFIG.EMBED_PLAYER_MIN_HEIGHT,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
