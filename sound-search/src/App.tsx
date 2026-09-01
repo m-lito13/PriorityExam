@@ -128,7 +128,12 @@ export default function App() {
 
       {/* MOBILE BOTTOM NAVIGATION (Phones Only) */}
       {isMobileDevice && (
-        <Paper elevation={3} sx={{ flexShrink: 0, zIndex: 10, borderRadius: 0 }}>
+        <Paper
+          component="nav"
+          aria-label="primary"
+          elevation={3}
+          sx={{ flexShrink: 0, zIndex: 10, borderRadius: 0 }}
+        >
           <BottomNavigation
             showLabels
             value={activeTab}
