@@ -6,7 +6,7 @@ import type { Track } from "../types";
 import { alpha } from "@mui/material/styles";
 import { LAYOUT_CONFIG } from "../const/layout";
 
-interface ImagePanelProps {
+interface TrackPanelProps {
   track?: Track;
   isPlaying: boolean;
   onImageClick: () => void;
@@ -24,11 +24,10 @@ declare global {
   }
 }
 
-export function TrackPanel({ track, isPlaying, onImageClick }: ImagePanelProps) {
+export function TrackPanel({ track, isPlaying, onImageClick }: TrackPanelProps) {
   const theme = useTheme();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
-  // Dynamically inject the Mixcloud Widget SDK script if missing
   useEffect(() => {
     if (!window.Mixcloud) {
       const script = document.createElement("script");
@@ -148,9 +147,7 @@ export function TrackPanel({ track, isPlaying, onImageClick }: ImagePanelProps) 
               px: 2,
             }}
           >
-            <Typography variant="body2">
-              Pick a result to bring it here
-            </Typography>
+            <Typography variant="body2">Pick a result to bring it here</Typography>
           </Box>
         )}
       </Box>

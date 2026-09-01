@@ -138,4 +138,3 @@ export const theme = createTheme({
     },
   },
 });
-export const customColors = palette;

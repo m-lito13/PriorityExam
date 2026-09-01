@@ -1,21 +1,13 @@
 import type { FormEvent } from "react";
 import { Box, Button, InputBase, Paper } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
-import { customColors } from "../theme/theme";
-
 
 interface SearchBarProps {
   value: string;
-  /** Fired on every keystroke — the caller (useTrackSearch) debounces this. */
   onChange: (value: string) => void;
-  /** Fired on Enter / button click — runs immediately, bypassing the debounce. */
   onSubmit: (value: string) => void;
 }
 
-/**
- * Purely presentational: no fetching, no debounce timer, no history logic.
- * It just reports what the user typed and when they asked to search "now".
- */
 export function SearchBar({ value, onChange, onSubmit }: SearchBarProps) {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -38,7 +30,7 @@ export function SearchBar({ value, onChange, onSubmit }: SearchBarProps) {
           display: "flex",
           alignItems: "center",
           px: 1.5,
-          backgroundColor: customColors.surfaceRaised,
+          backgroundColor: "app.surfaceRaised",
         }}
       >
         <SearchIcon sx={{ color: "text.secondary", fontSize: "small", mr: 1 }} />

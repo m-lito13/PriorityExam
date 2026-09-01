@@ -9,6 +9,7 @@ import {
   CircularProgress,
   Alert,
   Button,
+  useTheme,
 } from "@mui/material";
 import type { Track, ViewMode } from "../types";
 
@@ -31,6 +32,8 @@ export function SearchResults({
   onSelectTrack,
   onRetry,
 }: SearchResultsProps) {
+  const theme = useTheme();
+
   if (status === "loading") {
     return (
       <Box
@@ -144,7 +147,7 @@ export function SearchResults({
                   }}
                 />
                 <Box sx={{ p: 1 }}>
-                  <Typography variant="body2" noWrap sx={{ fontWeight: 600 }}>
+                  <Typography variant="body2" noWrap sx={{ fontWeight: theme.typography.fontWeightMedium }}>
                     {track.name}
                   </Typography>
                   <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
@@ -185,7 +188,7 @@ export function SearchResults({
             primary={track.name}
             secondary={track.artist}
             slotProps={{
-              primary: { noWrap: true, sx: { fontWeight: 600 } },
+              primary: { noWrap: true, sx: { fontWeight: theme.typography.fontWeightMedium } },
               secondary: { noWrap: true },
             }}
           />

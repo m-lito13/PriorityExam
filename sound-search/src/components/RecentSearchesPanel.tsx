@@ -1,6 +1,5 @@
-import { Paper, Typography, List, ListItemButton, ListItemText, Box } from "@mui/material";
+import { Paper, Typography, List, ListItemButton, ListItemText, Box, useTheme } from "@mui/material";
 import HistoryIcon from "@mui/icons-material/History";
-import { customColors } from "../theme/theme";
 
 interface RecentSearchesPanelProps {
   searches: string[];
@@ -8,6 +7,8 @@ interface RecentSearchesPanelProps {
 }
 
 export function RecentSearchesPanel({ searches, onSelect }: RecentSearchesPanelProps) {
+  const theme = useTheme();
+
   return (
     <Paper
       component="section"
@@ -46,7 +47,7 @@ export function RecentSearchesPanel({ searches, onSelect }: RecentSearchesPanelP
             >
               <HistoryIcon
                 fontSize="small"
-                sx={{ color: customColors.textMuted, mr: 1.5 }}
+                sx={{ color: theme.palette.text.secondary, mr: 1.5 }}
               />
               <ListItemText primary={term} />
             </ListItemButton>
