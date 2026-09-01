@@ -147,7 +147,7 @@ export function SearchResults({
                   <Typography variant="body2" noWrap sx={{ fontWeight: 600 }}>
                     {track.name}
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" noWrap display="block">
+                  <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
                     {track.artist}
                   </Typography>
                 </Box>

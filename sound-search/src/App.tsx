@@ -3,6 +3,7 @@ import { Box, BottomNavigation, BottomNavigationAction, Paper } from "@mui/mater
 import SearchIcon from "@mui/icons-material/Search";
 import MusicNoteIcon from "@mui/icons-material/MusicNote";
 import HistoryIcon from "@mui/icons-material/History";
+
 import { SearchPanel } from "./components/SearchPanel";
 import { RecentSearchesPanel } from "./components/RecentSearchesPanel";
 import { TrackPanel } from "./components/TrackPanel";
@@ -12,13 +13,7 @@ import { useIsMobileDevice } from "./hooks/useIsMobileDevice";
 import type { Track, ViewMode } from "./types";
 
 const MIN_LAYOUT_WIDTH = 320;
-// Only meaningful on desktop: guarantees the 3-column dashboard never
-// squishes below a usable height. Mobile has no floor here on purpose —
-// its single active tab-panel already scrolls its own content
-// internally (see panelSurfaceSx), so there's nothing for a height floor
-// to protect against.
 const MIN_DESKTOP_HEIGHT = 550;
-
 const TABS = { search: 0, nowPlaying: 1, history: 2 } as const;
 
 export default function App() {
@@ -27,8 +22,8 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeTab, setActiveTab] = useState<number>(TABS.search);
 
+  // Hook detects strictly phone-sized touch viewports (< 600px)
   const isMobileDevice = useIsMobileDevice();
-
   const { recentSearches, recordSearch } = useRecentSearches();
   const {
     query,
@@ -49,9 +44,8 @@ export default function App() {
     setSelectedTrack(track);
     setIsPlaying(false);
     notifyResultSelected();
-    // On mobile there's no room to show the artwork alongside the results
-    // list, so jump the user straight to it — that's the whole point of
-    // having tapped a result.
+
+    // Auto-switch tab on phone devices when selecting a track
     if (isMobileDevice) {
       setActiveTab(TABS.nowPlaying);
     }
@@ -63,10 +57,11 @@ export default function App() {
         display: "flex",
         flexDirection: "column",
         minWidth: MIN_LAYOUT_WIDTH,
-        height: isMobileDevice ? "100dvh" : { xs: "auto", md: "100dvh" },
-        minHeight: isMobileDevice ? undefined : { md: MIN_DESKTOP_HEIGHT },
+        // Phones lock to viewport height; Tablets scroll normally; Desktops (>= 1200px) lock height
+        height: isMobileDevice ? "100dvh" : { xs: "auto", lg: "100dvh" },
+        minHeight: isMobileDevice ? undefined : { lg: MIN_DESKTOP_HEIGHT },
         overflowX: "hidden",
-        overflowY: isMobileDevice ? "hidden" : { xs: "auto", md: "hidden" },
+        overflowY: isMobileDevice ? "hidden" : { xs: "auto", lg: "hidden" },
       }}
     >
       <Box
@@ -77,16 +72,19 @@ export default function App() {
           p: { xs: 2, md: 3 },
           gap: 2.5,
           display: "flex",
-          flexDirection: isMobileDevice ? "column" : { xs: "column", md: "row" },
-          overflow: isMobileDevice ? "hidden" : { xs: "visible", md: "hidden" },
+          // Stack panels vertically on phones & tablets; side-by-side row layout ONLY at >= 1200px (lg)
+          flexDirection: isMobileDevice ? "column" : { xs: "column", lg: "row" },
+          overflow: isMobileDevice ? "hidden" : { xs: "visible", lg: "hidden" },
         }}
       >
+        {/* SEARCH PANEL */}
         {(!isMobileDevice || activeTab === TABS.search) && (
           <Box
             sx={{
-              flex: { md: 1.3 },
+              flex: { lg: 1.3 },
+              width: "100%",
               minWidth: 0,
-              height: "100%",
+              height: isMobileDevice ? "100%" : { xs: "auto", lg: "100%" },
               minHeight: 0,
               display: "flex",
               flexDirection: "column",
@@ -112,12 +110,14 @@ export default function App() {
           </Box>
         )}
 
+        {/* TRACK PLAYER PANEL */}
         {(!isMobileDevice || activeTab === TABS.nowPlaying) && (
           <Box
             sx={{
-              flex: { md: 1 },
+              flex: { lg: 1 },
+              width: "100%",
               minWidth: 0,
-              height: "100%",
+              height: isMobileDevice ? "100%" : { xs: "auto", lg: "100%" },
               minHeight: 0,
               display: "flex",
               flexDirection: "column",
@@ -126,17 +126,19 @@ export default function App() {
             <TrackPanel
               track={selectedTrack}
               isPlaying={isPlaying}
-              onImageClick={() => setIsPlaying((p) => !p)}
+              onImageClick={() => setIsPlaying((prev) => !prev)}
             />
           </Box>
         )}
 
+        {/* RECENT SEARCHES PANEL */}
         {(!isMobileDevice || activeTab === TABS.history) && (
           <Box
             sx={{
-              flex: { md: 1 },
+              flex: { lg: 1 },
+              width: "100%",
               minWidth: 0,
-              height: "100%",
+              height: isMobileDevice ? "100%" : { xs: "auto", lg: "100%" },
               minHeight: 0,
               display: "flex",
               flexDirection: "column",
@@ -147,8 +149,9 @@ export default function App() {
         )}
       </Box>
 
+      {/* MOBILE BOTTOM NAVIGATION (Phones Only) */}
       {isMobileDevice && (
-        <Paper elevation={3} sx={{ flexShrink: 0, zIndex: 10 }}>
+        <Paper elevation={3} sx={{ flexShrink: 0, zIndex: 10, borderRadius: 0 }}>
           <BottomNavigation
             showLabels
             value={activeTab}
