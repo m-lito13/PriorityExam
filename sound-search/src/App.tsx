@@ -1,31 +1,30 @@
 import { useState } from "react";
-import { Box } from "@mui/material";
-import { SearchPanel } from "./components/SearchPanel";
-import { ImagePanel } from "./components/ImagePanel";
-import { RecentSearchesPanel } from "./components/RecentSearchesPanel";
-import { useTrackSearch } from "./hooks/useTrackSearch";
-import type { Track, ViewMode } from "./types";
-import { mockRecentSearches } from "./mock/mockTracks";
+import { Box, BottomNavigation, BottomNavigationAction, Paper } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import MusicNoteIcon from "@mui/icons-material/MusicNote";
+import HistoryIcon from "@mui/icons-material/History";
 
-/**
- * Step: the search results panel is now backed by `soundApiClient` (via
- * `useTrackSearch`) instead of a static mock array. Recent-searches
- * persistence and the view-mode-remembered-across-visits bonus still live
- * here as local state for now — those are the next step.
- */
+import { SearchPanel } from "./components/SearchPanel";
+import { RecentSearchesPanel } from "./components/RecentSearchesPanel";
+import { TrackPanel } from "./components/TrackPanel";
+import { useTrackSearch } from "./hooks/useTrackSearch";
+import { useRecentSearches } from "./hooks/useRecentSearches";
+import { useIsMobileDevice } from "./hooks/useIsMobileDevice";
+import type { Track, ViewMode } from "./types";
+import { LAYOUT_CONFIG } from "./const/layout";
+import { getPanelWrapperSx } from "./theme/layoutPrimitives";
+
+const TABS = { search: 0, nowPlaying: 1, history: 2 } as const;
+
 export default function App() {
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [selectedTrack, setSelectedTrack] = useState<Track | undefined>();
   const [isPlaying, setIsPlaying] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<string[]>(mockRecentSearches);
+  const [activeTab, setActiveTab] = useState<number>(TABS.search);
 
-  const recordSearch = (term: string) => {
-    setRecentSearches((prev) => {
-      const deduped = prev.filter((t) => t.toLowerCase() !== term.toLowerCase());
-      return [term, ...deduped].slice(0, 5);
-    });
-  };
-
+  // JS Hook handles phone-specific tab state (< 600px touch screens)
+  const isMobileDevice = useIsMobileDevice();
+  const { recentSearches, recordSearch } = useRecentSearches();
   const {
     query,
     tracks,
@@ -38,60 +37,105 @@ export default function App() {
     goNext,
     goPrevious,
     retry,
+    notifyResultSelected,
   } = useTrackSearch(recordSearch);
 
   const handleSelectTrack = (track: Track) => {
     setSelectedTrack(track);
     setIsPlaying(false);
+    notifyResultSelected();
+
+    if (isMobileDevice) {
+      setActiveTab(TABS.nowPlaying);
+    }
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      {/* <AppHeader /> */}
-
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        minWidth: LAYOUT_CONFIG.MIN_WIDTH,
+        height: isMobileDevice ? "100dvh" : { xs: "auto", lg: "100dvh" },
+        minHeight: isMobileDevice ? undefined : { lg: LAYOUT_CONFIG.MIN_DESKTOP_HEIGHT },
+        overflowX: "hidden",
+        overflowY: isMobileDevice ? "hidden" : { xs: "auto", lg: "hidden" },
+      }}
+    >
       <Box
         component="main"
         sx={{
           flex: 1,
-          display: "grid",
-          gap: 2.5,
+          minHeight: 0,
           p: { xs: 2, md: 3 },
-          gridTemplateColumns: { xs: "1fr", md: "1.3fr 1fr 1fr" },
-          alignItems: "start",
+          gap: 2.5,
+          display: "flex",
+          // Stack vertically on phones & tablets; side-by-side row layout ONLY at >= 1200px (lg)
+          flexDirection: isMobileDevice ? "column" : { xs: "column", lg: "row" },
+          overflow: isMobileDevice ? "hidden" : { xs: "visible", lg: "hidden" },
         }}
       >
-        <Box sx={{ minHeight: 480 }}>
-          <SearchPanel
-            tracks={tracks}
-            viewMode={viewMode}
-            selectedTrackId={selectedTrack?.id}
-            status={status}
-            errorMessage={errorMessage}
-            hasPrevious={hasPrevious}
-            hasNext={hasNext}
-            query={query}
-            onQueryChange={updateQuery}
-            onSubmitSearch={submitSearch}
-            onSelectTrack={handleSelectTrack}
-            onRetry={retry}
-            onPrevious={goPrevious}
-            onNext={goNext}
-            onViewModeChange={setViewMode}
-          />
-        </Box>
+        {/* SEARCH PANEL */}
+        {(!isMobileDevice || activeTab === TABS.search) && (
+          <Box sx={getPanelWrapperSx(isMobileDevice, { lg: 1.3 })}>
+            <SearchPanel
+              tracks={tracks}
+              viewMode={viewMode}
+              selectedTrackId={selectedTrack?.id}
+              status={status}
+              errorMessage={errorMessage}
+              hasPrevious={hasPrevious}
+              hasNext={hasNext}
+              query={query}
+              onQueryChange={updateQuery}
+              onSubmitSearch={submitSearch}
+              onSelectTrack={handleSelectTrack}
+              onRetry={retry}
+              onPrevious={goPrevious}
+              onNext={goNext}
+              onViewModeChange={setViewMode}
+            />
+          </Box>
+        )}
 
-        <Box sx={{ minHeight: 480 }}>
-          <ImagePanel
-            track={selectedTrack}
-            isPlaying={isPlaying}
-            onImageClick={() => setIsPlaying((p) => !p)}
-          />
-        </Box>
+        {/* TRACK PLAYER PANEL */}
+        {(!isMobileDevice || activeTab === TABS.nowPlaying) && (
+          <Box sx={getPanelWrapperSx(isMobileDevice, { lg: 1 })}>
+            <TrackPanel
+              track={selectedTrack}
+              isPlaying={isPlaying}
+              onImageClick={() => setIsPlaying((prev) => !prev)}
+            />
+          </Box>
+        )}
 
-        <Box sx={{ minHeight: 480 }}>
-          <RecentSearchesPanel searches={recentSearches} onSelect={submitSearch} />
-        </Box>
+        {/* RECENT SEARCHES PANEL */}
+        {(!isMobileDevice || activeTab === TABS.history) && (
+          <Box sx={getPanelWrapperSx(isMobileDevice, { lg: 1 })}>
+            <RecentSearchesPanel searches={recentSearches} onSelect={submitSearch} />
+          </Box>
+        )}
       </Box>
+
+      {/* MOBILE BOTTOM NAVIGATION (Phones Only) */}
+      {isMobileDevice && (
+        <Paper
+          component="nav"
+          aria-label="primary"
+          elevation={3}
+          sx={{ flexShrink: 0, zIndex: (theme) => theme.zIndex.appBar, borderRadius: 0 }}
+        >
+          <BottomNavigation
+            showLabels
+            value={activeTab}
+            onChange={(_, newValue) => setActiveTab(newValue)}
+          >
+            <BottomNavigationAction label="Search" icon={<SearchIcon />} />
+            <BottomNavigationAction label="Now Playing" icon={<MusicNoteIcon />} />
+            <BottomNavigationAction label="History" icon={<HistoryIcon />} />
+          </BottomNavigation>
+        </Paper>
+      )}
     </Box>
   );
 }

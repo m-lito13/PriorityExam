@@ -9,8 +9,10 @@ import {
   CircularProgress,
   Alert,
   Button,
+  useTheme,
 } from "@mui/material";
 import type { Track, ViewMode } from "../types";
+import { LAYOUT_CONFIG } from "../const/layout";
 
 interface SearchResultsProps {
   tracks: Track[];
@@ -31,22 +33,25 @@ export function SearchResults({
   onSelectTrack,
   onRetry,
 }: SearchResultsProps) {
+  const theme = useTheme();
+
   if (status === "loading") {
     return (
       <Box
         sx={{
+          height: "100%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
           gap: 1.5,
-          py: 6,
+          py: 4,
           color: "text.secondary",
         }}
         role="status"
         aria-live="polite"
       >
-        <CircularProgress size={28} color="secondary" />
+        <CircularProgress size={28} color="primary" />
         <Typography variant="body2">searching…</Typography>
       </Box>
     );
@@ -62,7 +67,7 @@ export function SearchResults({
             Retry
           </Button>
         }
-        sx={{ my: 2 }}
+        sx={{ my: 1 }}
       >
         {errorMessage ?? "Couldn't reach the search API. Check your connection and try again."}
       </Alert>
@@ -99,54 +104,61 @@ export function SearchResults({
         aria-label="search results"
         sx={{ listStyle: "none", m: 0, p: 0 }}
       >
-        {tracks.map((track) => (
-          <Grid key={track.id} size={6} component="li">
-            <Box
-              component="button"
-              role="option"
-              aria-selected={track.id === selectedTrackId}
-              onClick={() => onSelectTrack(track)}
-              sx={{
-                width: "100%",
-                border: "none",
-                p: 0,
-                cursor: "pointer",
-                borderRadius: 2,
-                overflow: "hidden",
-                textAlign: "left",
-                backgroundColor: "transparent",
-                outline: (theme) =>
-                  track.id === selectedTrackId
-                    ? `2px solid ${theme.palette.secondary.main}`
-                    : "2px solid transparent",
-                "&:hover": { opacity: 0.9 },
-                "&:focus-visible": {
-                  outline: (theme) => `2px solid ${theme.palette.primary.main}`,
-                },
-              }}
-            >
+        {tracks.map((track) => {
+          const isSelected = track.id === selectedTrackId;
+          return (
+            <Grid key={track.id} size={6} component="li">
               <Box
-                component="img"
-                src={track.imageUrl}
-                alt=""
+                component="button"
+                role="option"
+                aria-selected={isSelected}
+                onClick={() => onSelectTrack(track)}
                 sx={{
                   width: "100%",
-                  aspectRatio: "1 / 1",
-                  objectFit: "cover",
-                  display: "block",
+                  border: "none",
+                  p: 0,
+                  cursor: "pointer",
+                  borderRadius: 2,
+                  overflow: "hidden",
+                  textAlign: "left",
+                  backgroundColor: "background.paper",
+                  outline: (theme) =>
+                    isSelected
+                      ? `2px solid ${theme.palette.primary.main}`
+                      : "2px solid transparent",
+                  transition: (theme) =>
+                    theme.transitions.create(["outline-color", "opacity"], {
+                      duration: theme.transitions.duration.shortest,
+                    }),
+                  "&:hover": { opacity: 0.9 },
+                  "&:focus-visible": {
+                    outline: (theme) => `2px solid ${theme.palette.primary.main}`,
+                  },
                 }}
-              />
-              <Box sx={{ p: 1, backgroundColor: "background.paper" }}>
-                <Typography variant="body2" noWrap sx={{ fontWeight: 600 }}>
-                  {track.name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" noWrap>
-                  {track.artist}
-                </Typography>
+              >
+                <Box
+                  component="img"
+                  src={track.imageUrl}
+                  alt=""
+                  sx={{
+                    width: "100%",
+                    aspectRatio: "1 / 1",
+                    objectFit: "cover",
+                    display: "block",
+                  }}
+                />
+                <Box sx={{ p: 1 }}>
+                  <Typography variant="body2" noWrap sx={{ fontWeight: theme.typography.fontWeightMedium }}>
+                    {track.name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary" noWrap sx={{ display: "block" }}>
+                    {track.artist}
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
-          </Grid>
-        ))}
+            </Grid>
+          );
+        })}
       </Grid>
     );
   }
@@ -161,6 +173,7 @@ export function SearchResults({
       {tracks.map((track) => (
         <ListItemButton
           key={track.id}
+          component="li"
           role="option"
           aria-selected={track.id === selectedTrackId}
           selected={track.id === selectedTrackId}
@@ -171,13 +184,17 @@ export function SearchResults({
             variant="rounded"
             src={track.imageUrl}
             alt=""
-            sx={{ width: 36, height: 36, mr: 1.5 }}
+            sx={{
+              width: LAYOUT_CONFIG.RESULT_AVATAR_SIZE,
+              height: LAYOUT_CONFIG.RESULT_AVATAR_SIZE,
+              mr: 1.5,
+            }}
           />
           <ListItemText
             primary={track.name}
             secondary={track.artist}
             slotProps={{
-              primary: { noWrap: true, sx: { fontWeight: 600 } },
+              primary: { noWrap: true, sx: { fontWeight: theme.typography.fontWeightMedium } },
               secondary: { noWrap: true },
             }}
           />

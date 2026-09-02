@@ -1,9 +1,10 @@
 import type { Track } from "../types";
 import type { SearchOptions, SearchResponse, SoundApiClient } from "./types";
 import { SoundApiError, isAbortError } from "./errors";
+import { MIXCLOUD_API } from "../const/mixcloudApi";
+import { PAGE_SIZE } from "../const/search";
 
-const SEARCH_ENDPOINT = "https://api.mixcloud.com/search/";
-const EMBED_BASE = "https://www.mixcloud.com/widget/iframe/";
+const { SEARCH_ENDPOINT, EMBED_BASE } = MIXCLOUD_API;
 
 // Only the fields we actually read. Mixcloud's real objects have more —
 // deliberately not modeling those, so a schema change there doesn't ripple
@@ -62,12 +63,13 @@ function buildEmbedUrl(showUrl: string): string {
     feed: showUrl,
     hide_cover: "1",
     light: "1",
+    autoplay: "1"
   });
   return `${EMBED_BASE}?${params.toString()}`;
 }
 
 export class MixcloudSoundApiClient implements SoundApiClient {
-  async search({ query, cursor, pageSize = 6, signal }: SearchOptions): Promise<SearchResponse> {
+  async search({ query, cursor, pageSize = PAGE_SIZE, signal }: SearchOptions): Promise<SearchResponse> {
     const trimmed = query.trim();
     if (!trimmed) {
       return { tracks: [], nextCursor: null, previousCursor: null };

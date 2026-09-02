@@ -10,10 +10,33 @@ const palette = {
   textPrimary: "#EDEEF0",
   textMuted: "#8B93A3",
   amber: "#F2A93B", // primary accent — search, CTAs
-  amberDim: "#7A5A24",
   teal: "#34D1BF", // secondary accent — "now playing" / live signal
   danger: "#E5677B",
 };
+
+// MUI's default Palette shape has no slot for "elevated panel background" —
+// this is the one genuinely custom token the design needs, so it gets
+// added to the theme itself (not a parallel object) via module
+// augmentation. Everything else the app needs (hairline, amber, teal,
+// textMuted, ink, surface) already has a standard MUI home — see the
+// mapping in the createTheme call below — so components should read
+// those through `theme.palette.*`/`useTheme()`, never a separate import.
+declare module "@mui/material/styles" {
+  interface Palette {
+    app: { surfaceRaised: string };
+  }
+  interface PaletteOptions {
+    app?: { surfaceRaised: string };
+  }
+  interface BreakpointOverrides {
+    xs: true;
+    sm: true;
+    md: true;
+    lg: true;
+    xl: true;
+    tablet: true; // Adds custom breakpoint 'tablet'
+  }
+}
 
 export const theme = createTheme({
   palette: {
@@ -38,6 +61,20 @@ export const theme = createTheme({
       secondary: palette.textMuted,
     },
     divider: palette.hairline,
+    app: {
+      surfaceRaised: palette.surfaceRaised,
+    },
+    
+  },
+  breakpoints: {
+    values: {
+      xs: 0,
+      sm: 600,
+      tablet: 768, // Custom pixel value
+      md: 900,
+      lg: 1200,
+      xl: 1536,
+    },
   },
   shape: {
     borderRadius: 10,
@@ -65,6 +102,18 @@ export const theme = createTheme({
     },
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        // Establishes the definite-height chain the app's internal
+        // scroll areas depend on — without this, height: "100%"/"100dvh"
+        // further down has nothing concrete to resolve against, and flex
+        // children with overflow:auto silently collapse to 0 height
+        // instead of scrolling.
+        html: { height: "100%" },
+        body: { height: "100%" },
+        "#root": { height: "100%" },
+      },
+    },
     MuiPaper: {
       styleOverrides: {
         root: {
@@ -89,5 +138,3 @@ export const theme = createTheme({
     },
   },
 });
-
-export const customColors = palette;
