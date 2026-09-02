@@ -1,7 +1,7 @@
 import type { Track } from "../types";
 import type { SearchOptions, SearchResponse, SoundApiClient } from "./types";
 import { SoundApiError, isAbortError } from "./errors";
-import { delay } from "./utils";
+import { delay } from "./delay";
 
 const DEFAULT_PAGE_SIZE = 6;
 const SIMULATED_LATENCY_MS = 500;

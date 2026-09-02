@@ -68,14 +68,7 @@ export function useTrackSearch(onCommitted: (term: string) => void): UseTrackSea
   // Survive re-renders without themselves triggering one.
   const abortControllerRef = useRef<AbortController | null>(null);
   const debounceTimerRef = useRef<number | undefined>(undefined);
-  // AbortController alone isn't enough to prevent a race: abort() only
-  // affects a request that's still pending. If an earlier request happens
-  // to fully resolve just before a newer one starts, abort() on it does
-  // nothing — it already settled — and its .then() can still fire *after*
-  // the newer request's, clobbering fresher state with stale results. This
-  // counter is the actual guard: every response checks it's still the most
-  // recently *started* request before touching state, independent of what
-  // the abort signal says.
+
   const latestRequestIdRef = useRef(0);
 
   function fetchPage(term: string, pageCursor: string | null) {
@@ -130,7 +123,9 @@ export function useTrackSearch(onCommitted: (term: string) => void): UseTrackSea
     // not whatever partial word the debounce happened to fire on — so
     // only an explicit submit (submitSearch) logs it, never the
     // live-as-you-type debounce path below.
-    if (recordHistory && term.trim()) onCommitted(term.trim());
+    if (recordHistory && term.trim()) { 
+      onCommitted(term.trim());
+    } 
   }
 
   function updateQuery(value: string) {
