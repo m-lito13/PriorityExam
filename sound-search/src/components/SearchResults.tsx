@@ -12,6 +12,7 @@ import {
   useTheme,
 } from "@mui/material";
 import type { Track, ViewMode } from "../types";
+import { LAYOUT_CONFIG } from "../const/layout";
 
 interface SearchResultsProps {
   tracks: Track[];
@@ -172,6 +173,7 @@ export function SearchResults({
       {tracks.map((track) => (
         <ListItemButton
           key={track.id}
+          component="li"
           role="option"
           aria-selected={track.id === selectedTrackId}
           selected={track.id === selectedTrackId}
@@ -182,7 +184,11 @@ export function SearchResults({
             variant="rounded"
             src={track.imageUrl}
             alt=""
-            sx={{ width: 36, height: 36, mr: 1.5 }}
+            sx={{
+              width: LAYOUT_CONFIG.RESULT_AVATAR_SIZE,
+              height: LAYOUT_CONFIG.RESULT_AVATAR_SIZE,
+              mr: 1.5,
+            }}
           />
           <ListItemText
             primary={track.name}

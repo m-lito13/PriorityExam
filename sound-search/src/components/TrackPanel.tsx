@@ -192,7 +192,9 @@ export function TrackPanel({ track, isPlaying, onImageClick }: TrackPanelProps) 
                         ? alpha(theme.palette.background.default, 0.15)
                         : alpha(theme.palette.background.default, 0.35),
                     transition: "background-color 0.2s ease",
-                    "&:hover": { backgroundColor: "rgba(18,20,26,0.15)" },
+                    "&:hover": {
+                      backgroundColor: (theme) => alpha(theme.palette.background.default, 0.15),
+                    },
                   }}
                 >
                   {isActuallyPlaying ? (
@@ -230,7 +232,7 @@ export function TrackPanel({ track, isPlaying, onImageClick }: TrackPanelProps) 
           mt: 2,
           width: "100%",
           textAlign: "center",
-          minHeight: 28,
+          minHeight: LAYOUT_CONFIG.TRACK_TITLE_MIN_HEIGHT,
           overflowWrap: "break-word",
           wordBreak: "break-word",
         }}

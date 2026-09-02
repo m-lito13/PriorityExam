@@ -12,7 +12,9 @@ export function SearchBar({ value, onChange, onSubmit }: SearchBarProps) {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     const trimmed = value.trim();
-    if (trimmed) onSubmit(trimmed);
+    if (trimmed) { 
+      onSubmit(trimmed);
+    } 
   };
 
   return (

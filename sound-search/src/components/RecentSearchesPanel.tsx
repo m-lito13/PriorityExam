@@ -39,6 +39,7 @@ export function RecentSearchesPanel({ searches, onSelect }: RecentSearchesPanelP
           {searches.map((term) => (
             <ListItemButton
               key={term}
+              component="li"
               onClick={() => onSelect(term)}
               sx={{ borderRadius: 1.5, mb: 0.5 }}
             >

@@ -123,7 +123,7 @@ export default function App() {
           component="nav"
           aria-label="primary"
           elevation={3}
-          sx={{ flexShrink: 0, zIndex: 10, borderRadius: 0 }}
+          sx={{ flexShrink: 0, zIndex: (theme) => theme.zIndex.appBar, borderRadius: 0 }}
         >
           <BottomNavigation
             showLabels
