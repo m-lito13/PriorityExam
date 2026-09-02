@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { soundApiClient, isAbortError, SoundApiError } from "../api";
 import type { Track } from "../types";
+import { PAGE_SIZE, DEBOUNCE_MS } from "../const/search";
 
 export type SearchStatus = "idle" | "loading" | "error" | "ready";
-
-const PAGE_SIZE = 6;
-const DEBOUNCE_MS = 300;
 
 interface UseTrackSearchResult {
   /** Current text in the search box (kept in sync so a history click updates it too). */

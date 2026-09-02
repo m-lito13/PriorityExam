@@ -2,6 +2,7 @@ import type { Track } from "../types";
 import type { SearchOptions, SearchResponse, SoundApiClient } from "./types";
 import { SoundApiError, isAbortError } from "./errors";
 import { MIXCLOUD_API } from "../const/mixcloudApi";
+import { PAGE_SIZE } from "../const/search";
 
 const { SEARCH_ENDPOINT, EMBED_BASE } = MIXCLOUD_API;
 
@@ -68,7 +69,7 @@ function buildEmbedUrl(showUrl: string): string {
 }
 
 export class MixcloudSoundApiClient implements SoundApiClient {
-  async search({ query, cursor, pageSize = 6, signal }: SearchOptions): Promise<SearchResponse> {
+  async search({ query, cursor, pageSize = PAGE_SIZE, signal }: SearchOptions): Promise<SearchResponse> {
     const trimmed = query.trim();
     if (!trimmed) {
       return { tracks: [], nextCursor: null, previousCursor: null };
