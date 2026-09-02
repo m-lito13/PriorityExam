@@ -12,6 +12,7 @@ import { useRecentSearches } from "./hooks/useRecentSearches";
 import { useIsMobileDevice } from "./hooks/useIsMobileDevice";
 import type { Track, ViewMode } from "./types";
 import { LAYOUT_CONFIG } from "./const/layout";
+import { getPanelWrapperSx } from "./theme/layoutPrimitives";
 
 const TABS = { search: 0, nowPlaying: 1, history: 2 } as const;
 
@@ -49,16 +50,6 @@ export default function App() {
     }
   };
 
-  // Standardized panel box styles leveraging JS mobile flag & theme breakpoints
-  const panelWrapperSx = {
-    width: "100%",
-    minWidth: 0,
-    minHeight: 0,
-    display: "flex",
-    flexDirection: "column",
-    height: isMobileDevice ? "100%" : { xs: "auto", lg: "100%" },
-  } as const;
-
   return (
     <Box
       sx={{
@@ -86,7 +77,7 @@ export default function App() {
       >
         {/* SEARCH PANEL */}
         {(!isMobileDevice || activeTab === TABS.search) && (
-          <Box sx={{ ...panelWrapperSx, flex: { lg: 1.3 } }}>
+          <Box sx={getPanelWrapperSx(isMobileDevice, { lg: 1.3 })}>
             <SearchPanel
               tracks={tracks}
               viewMode={viewMode}
@@ -109,7 +100,7 @@ export default function App() {
 
         {/* TRACK PLAYER PANEL */}
         {(!isMobileDevice || activeTab === TABS.nowPlaying) && (
-          <Box sx={{ ...panelWrapperSx, flex: { lg: 1 } }}>
+          <Box sx={getPanelWrapperSx(isMobileDevice, { lg: 1 })}>
             <TrackPanel
               track={selectedTrack}
               isPlaying={isPlaying}
@@ -120,7 +111,7 @@ export default function App() {
 
         {/* RECENT SEARCHES PANEL */}
         {(!isMobileDevice || activeTab === TABS.history) && (
-          <Box sx={{ ...panelWrapperSx, flex: { lg: 1 } }}>
+          <Box sx={getPanelWrapperSx(isMobileDevice, { lg: 1 })}>
             <RecentSearchesPanel searches={recentSearches} onSelect={submitSearch} />
           </Box>
         )}

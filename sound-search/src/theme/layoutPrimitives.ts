@@ -1,4 +1,5 @@
 import type { SxProps, Theme } from "@mui/material/styles";
+import type { ResponsiveStyleValue } from "@mui/system";
 
 /**
  * The layout contract every top-level panel (Search / Now Viewing / Recent
@@ -21,3 +22,29 @@ export const panelSurfaceSx: SxProps<Theme> = {
   overflowY: "auto",
 };
 
+/**
+ * The sx for the Box that *wraps* each top-level panel in App.tsx's layout
+ * (as opposed to panelSurfaceSx above, which styles the panel's own Paper).
+ * Every panel wrapper needs the same shrink/height rules and differs only
+ * in how much of the row it claims — hence `flex` as a parameter instead
+ * of a fixed constant.
+ *
+ * On mobile (single active tab, fixed-height app shell) the wrapper always
+ * fills its parent exactly. On desktop, below lg it sizes to its content
+ * (page can grow/scroll), and at lg it fills the row height for the
+ * 3-column flex layout.
+ */
+export function getPanelWrapperSx(
+  isMobileDevice: boolean,
+  flex: ResponsiveStyleValue<number>,
+): SxProps<Theme> {
+  return {
+    width: "100%",
+    minWidth: 0,
+    minHeight: 0,
+    display: "flex",
+    flexDirection: "column",
+    height: isMobileDevice ? "100%" : { xs: "auto", lg: "100%" },
+    flex,
+  };
+}
