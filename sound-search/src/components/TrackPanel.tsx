@@ -60,18 +60,21 @@ export function TrackPanel({ track, isPlaying, onImageClick }: TrackPanelProps) 
   const playButtonRef = useRef<HTMLButtonElement | null>(null);
   const [isActuallyPlaying, setIsActuallyPlaying] = useState(false);
 
+  // A newly-selected track always starts unplayed — without this, if the
+  // previous track was mid-playback when a new one got selected, this
+  // state would otherwise carry over and show the waveform on artwork
+  // that hasn't started playing yet. Adjusted during render (rather than
+  // in an Effect) so there's no intermediate frame with the stale value.
+  const [prevTrackId, setPrevTrackId] = useState(track?.id);
+  if (track?.id !== prevTrackId) {
+    setPrevTrackId(track?.id);
+    setIsActuallyPlaying(false);
+  }
+
   useEffect(() => {
     if (track) {
       playButtonRef.current?.focus({ preventScroll: true });
     }
-  }, [track?.id]);
-
-  // A newly-selected track always starts unplayed — without this, if the
-  // previous track was mid-playback when a new one got selected, this
-  // state would otherwise carry over and show the waveform on artwork
-  // that hasn't started playing yet.
-  useEffect(() => {
-    setIsActuallyPlaying(false);
   }, [track?.id]);
 
   // Kick off the script load as early as possible (on mount) so it's
