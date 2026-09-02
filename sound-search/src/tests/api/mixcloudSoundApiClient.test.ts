@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { MixcloudSoundApiClient } from "../../api/mixcloudSoundApiClient";
 import { SoundApiError } from "../../api/errors";
+import { MIXCLOUD_API } from "../../const/mixcloudApi";
 
 function jsonResponse(body: unknown, init?: ResponseInit): Response {
   return new Response(JSON.stringify(body), {
@@ -38,13 +39,13 @@ describe("MixcloudSoundApiClient", () => {
 
     const [url] = fetchMock.mock.calls[0];
     expect(url).toBe(
-      "https://api.mixcloud.com/search/?q=deep+house&type=cloudcast&limit=12",
+      `${MIXCLOUD_API.SEARCH_ENDPOINT}?q=deep+house&type=cloudcast&limit=12`,
     );
   });
 
   it("uses a paging cursor verbatim instead of rebuilding query params", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse({ data: [] }));
-    const cursor = "https://api.mixcloud.com/search/?q=deep+house&offset=12";
+    const cursor = `${MIXCLOUD_API.SEARCH_ENDPOINT}?q=deep+house&offset=12`;
 
     await client.search({ query: "deep house", cursor });
 
@@ -53,12 +54,13 @@ describe("MixcloudSoundApiClient", () => {
   });
 
   it("maps a cloudcast to a Track, falling back through picture sizes and user fields", async () => {
+    const cloudcastUrl = "https://www.mixcloud.com/artist/show/";
     fetchMock.mockResolvedValueOnce(
       jsonResponse({
         data: [
           {
             key: "/artist/show/",
-            url: "https://www.mixcloud.com/artist/show/",
+            url: cloudcastUrl,
             name: "Late Night Mix",
             user: { username: "artistname" },
             pictures: { medium: "https://img/medium.jpg", thumbnail: "https://img/thumb.jpg" },
@@ -76,8 +78,7 @@ describe("MixcloudSoundApiClient", () => {
         name: "Late Night Mix",
         artist: "artistname",
         imageUrl: "https://img/medium.jpg",
-        embedUrl:
-          "https://player-widget.mixcloud.com?feed=https%3A%2F%2Fwww.mixcloud.com%2Fartist%2Fshow%2F&hide_cover=1&light=1&autoplay=1",
+        embedUrl: `${MIXCLOUD_API.EMBED_BASE}?feed=${encodeURIComponent(cloudcastUrl)}&hide_cover=1&light=1&autoplay=1`,
       },
     ]);
     expect(result.nextCursor).toBe("next-url");

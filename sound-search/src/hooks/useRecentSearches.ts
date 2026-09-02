@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import { readJson, writeJson } from "../utils/localStorage";
-import { mockRecentSearches } from "../mock/mockTracks";
-
 
 const STORAGE_KEY = "sound-search:recent-searches";
 const MAX_ENTRIES = 5;
@@ -11,11 +9,6 @@ function isStringArray(value: unknown): value is string[] {
 }
 
 function loadInitial(): string[] {
-  // Falls back to the seed list only when nothing has ever been saved
-  // (fresh browser/profile) — a real prior visit's empty history should
-  // stay empty, not get re-seeded with mock terms.
-  const hasStoredValue = window.localStorage.getItem(STORAGE_KEY) !== null;
-  if (!hasStoredValue) return mockRecentSearches;
   return readJson(STORAGE_KEY, [], isStringArray);
 }
 

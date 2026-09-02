@@ -1,9 +1,9 @@
 import type { Track } from "../types";
 import type { SearchOptions, SearchResponse, SoundApiClient } from "./types";
 import { SoundApiError, isAbortError } from "./errors";
+import { MIXCLOUD_API } from "../const/mixcloudApi";
 
-const SEARCH_ENDPOINT = "https://api.mixcloud.com/search/";
-const EMBED_BASE = "https://player-widget.mixcloud.com"; //"https://www.mixcloud.com/widget/iframe/";
+const { SEARCH_ENDPOINT, EMBED_BASE } = MIXCLOUD_API;
 
 // Only the fields we actually read. Mixcloud's real objects have more —
 // deliberately not modeling those, so a schema change there doesn't ripple
