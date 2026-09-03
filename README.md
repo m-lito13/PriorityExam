@@ -25,7 +25,7 @@ A responsive, feature-rich React & TypeScript web application for discovering an
 
 ## 🏗 Tech Stack & Architecture
 
-- **Frontend Framework**: React 18 / TypeScript
+- **Frontend Framework**: React 19 / TypeScript
 - **Build Tool**: Vite
 - **Deployment Platform**: Vercel
 - **Styling & Primitive Components**: Custom theme, modular primitive layouts, CSS-in-JS styling
