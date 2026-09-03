@@ -5,6 +5,13 @@ import { PAGE_SIZE, DEBOUNCE_MS } from "../const/search";
 
 export type SearchStatus = "idle" | "loading" | "error" | "ready";
 
+/** Everything needed to redisplay a page without re-hitting the API. */
+interface PageSnapshot {
+  tracks: Track[];
+  nextCursor: string | null;
+  previousCursor: string | null;
+}
+
 interface UseTrackSearchResult {
   /** Current text in the search box (kept in sync so a history click updates it too). */
   query: string;
@@ -54,7 +61,6 @@ export function useTrackSearch(onCommitted: (term: string) => void): UseTrackSea
   const [tracks, setTracks] = useState<Track[]>([]);
   const [status, setStatus] = useState<SearchStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string>();
-  const [cursor, setCursor] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [previousCursor, setPreviousCursor] = useState<string | null>(null);
   // The term that actually produced the tracks currently on screen — not
@@ -69,7 +75,45 @@ export function useTrackSearch(onCommitted: (term: string) => void): UseTrackSea
 
   const latestRequestIdRef = useRef(0);
 
-  function fetchPage(term: string, pageCursor: string | null) {
+  // Pages already fetched for the *current* committed term, in the order
+  // visited (index 0 = first page). Navigation here is strictly linear —
+  // Next/Previous only ever move one position at a time — so position is
+  // enough to identify a page; we don't need to match provider cursor
+  // strings, which aren't guaranteed to round-trip (e.g. Mixcloud's
+  // `previousCursor` on page 2 is its own opaque URL, not the `null`
+  // sentinel our own first request used). Lets Next then Previous redisplay
+  // a page instantly with no network call. Reset whenever a new term is
+  // committed, since pages from a different term don't belong here.
+  const pageStackRef = useRef<PageSnapshot[]>([]);
+  const pageIndexRef = useRef(-1);
+
+  // The (term, cursor, navigation) of the most recently *attempted* fetch —
+  // updated whether it succeeds or fails, unlike the stack above. `retry`
+  // replays this verbatim, so it redoes whatever actually failed (a first
+  // search or a Next) rather than re-requesting whatever page happens to
+  // be showing.
+  const pendingFetchRef = useRef<{ term: string; cursor: string | null; navigation: "reset" | "forward" }>(
+    { term: "", cursor: null, navigation: "reset" },
+  );
+
+  function applySnapshot(snapshot: PageSnapshot) {
+    setTracks(snapshot.tracks);
+    setNextCursor(snapshot.nextCursor);
+    setPreviousCursor(snapshot.previousCursor);
+    setStatus("ready");
+  }
+
+  // Redisplay a cached page without touching the network — still cancels
+  // any in-flight request so a slow stale response can't clobber it.
+  function restoreCachedPage(targetIndex: number, snapshot: PageSnapshot) {
+    abortControllerRef.current?.abort();
+    latestRequestIdRef.current += 1;
+    pageIndexRef.current = targetIndex;
+    setErrorMessage(undefined);
+    applySnapshot(snapshot);
+  }
+
+  function fetchPage(term: string, pageCursor: string | null, navigation: "reset" | "forward") {
     const trimmed = term.trim();
     if (!trimmed) {
       abortControllerRef.current?.abort();
@@ -78,8 +122,12 @@ export function useTrackSearch(onCommitted: (term: string) => void): UseTrackSea
       setTracks([]);
       setNextCursor(null);
       setPreviousCursor(null);
+      pageStackRef.current = [];
+      pageIndexRef.current = -1;
       return;
     }
+
+    pendingFetchRef.current = { term, cursor: pageCursor, navigation };
 
     // Cancel whatever was in flight — a fresh search, or a rapid extra
     // Next/Previous click — so its response can never land after this one
@@ -97,10 +145,20 @@ export function useTrackSearch(onCommitted: (term: string) => void): UseTrackSea
       .search({ query: trimmed, cursor: pageCursor, pageSize: PAGE_SIZE, signal: controller.signal })
       .then((response) => {
         if (latestRequestIdRef.current !== requestId) return; // superseded — drop it
-        setTracks(response.tracks);
-        setNextCursor(response.nextCursor);
-        setPreviousCursor(response.previousCursor);
-        setStatus("ready");
+        const snapshot: PageSnapshot = {
+          tracks: response.tracks,
+          nextCursor: response.nextCursor,
+          previousCursor: response.previousCursor,
+        };
+        if (navigation === "reset") {
+          pageStackRef.current = [snapshot];
+          pageIndexRef.current = 0;
+        } else {
+          const targetIndex = pageIndexRef.current + 1;
+          pageStackRef.current = [...pageStackRef.current.slice(0, targetIndex), snapshot];
+          pageIndexRef.current = targetIndex;
+        }
+        applySnapshot(snapshot);
         setResultsTerm(trimmed);
       })
       .catch((err: unknown) => {
@@ -115,8 +173,12 @@ export function useTrackSearch(onCommitted: (term: string) => void): UseTrackSea
 
   function commit(term: string, recordHistory: boolean) {
     window.clearTimeout(debounceTimerRef.current);
-    setCursor(null);
-    fetchPage(term, null);
+    // Clear synchronously (not just inside fetchPage's success handler) so
+    // a failed search for the new term can't leave the previous term's
+    // pages sitting in the cache for Next/Previous to serve up.
+    pageStackRef.current = [];
+    pageIndexRef.current = -1;
+    fetchPage(term, null, "reset");
     // History should reflect what the user actually meant to search for,
     // not whatever partial word the debounce happened to fire on — so
     // only an explicit submit (submitSearch) logs it, never the
@@ -141,18 +203,32 @@ export function useTrackSearch(onCommitted: (term: string) => void): UseTrackSea
 
   function goNext() {
     if (!nextCursor) return;
-    setCursor(nextCursor);
-    fetchPage(query, nextCursor);
+    const targetIndex = pageIndexRef.current + 1;
+    const cached = pageStackRef.current[targetIndex];
+    if (cached) {
+      restoreCachedPage(targetIndex, cached);
+      return;
+    }
+    fetchPage(query, nextCursor, "forward");
   }
 
   function goPrevious() {
     if (!previousCursor) return;
-    setCursor(previousCursor);
-    fetchPage(query, previousCursor);
+    const targetIndex = pageIndexRef.current - 1;
+    const cached = pageStackRef.current[targetIndex];
+    if (cached) {
+      restoreCachedPage(targetIndex, cached);
+      return;
+    }
+    // Structurally shouldn't happen — a previousCursor only ever exists
+    // because we already visited that earlier page — but fall back to a
+    // fresh fetch, treated as a new baseline, rather than getting stuck.
+    fetchPage(query, previousCursor, "reset");
   }
 
   function retry() {
-    fetchPage(query, cursor);
+    const pending = pendingFetchRef.current;
+    fetchPage(pending.term, pending.cursor, pending.navigation);
   }
 
   function notifyResultSelected() {
